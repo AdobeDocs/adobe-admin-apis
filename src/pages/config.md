@@ -1,5 +1,5 @@
 - pathPrefix:
-    - /dev-site-documentation-template/
+    - /adobe-admin-apis/
 
 - versions:
     - [v2.0](/index.md) selected

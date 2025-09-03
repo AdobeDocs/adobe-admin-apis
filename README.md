@@ -1,7 +1,7 @@
-# Adobe Dev Template Documentation
+# Adobe DevDocs
 
-Adobe Dev Template  documentation site deployed to EDS.
-The production address is https://developer.adobe.com/<path-prefix>
+Adobe DevDocs site deployed to EDS.
+The production address is https://developer.adobe.com/adobe-admin-apis
 
 ## Quick Start
 

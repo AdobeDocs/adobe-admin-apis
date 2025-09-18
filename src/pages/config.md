@@ -1,27 +1,21 @@
 - pathPrefix:
-    - /adobe-admin-apis/
-
-- versions:
-    - [v2.0](/index.md) selected
-    - [v1.4](https://github.com/AdobeDocs/dev-site) 
+  - /adobe-admin-apis/
 
 - pages:
-    - [Cat Analytics](/index.md)
-    - [Guides](/guides/index.md)
-    - API Reference
-        - [Cat Reference v2.0](/api/index.md)
-        - [Cat Reference v1.4](/api/1-4.md)
-    - [Support](/support/index.md)
+
+  - [Adobe Admin APIs](./index.md)
+  - [Guides](./guides/index.md)
+  - [API Reference](./api/index.md)
 
 - subPages:
-    - [Get Started](/guides/index.md) 
-        - [Dummy an OAuth Client](/guides/dummy_oauth_client/index.md) 
-        - [Dummy OAuth using POSTMAN](/guides/dummy_using_postman/index.md) 
-    - [Cat Metrics API](/guides/dummy_metrics_api/index.md) 
-    - [Migrating](/guides/migrating/index.md) 
-    - [Overview](/support/index.md) header
-        - [Help](/support/index.md) 
-        - [FAQ](/support/FAQ/index.md) 
-        - [How to contribute](/support/contribute/index.md) 
-    - [Community](/support/community/index.md) header
-        - [Information](/support/community/index.md) 
+  - [Overview](./guides/index.md)
+    - [Best practices](./guides/overview/bestpractices.md)
+    - [Administrative Capabilities](./guides/overview/capabilities.md)
+    - [Rate limits](./guides/overview/limits.md)
+    - [Roles and permissions](./guides/overview/permissions.md)
+  - [Getting started](./guides/getting-started/index.md)
+    - [Generate API key and access token through Adobe Developer Console](./guides/getting-started/console.md)
+    - [Authentication setup](./guides/getting-started/authentication.md)
+  - [Working with Adobe Admin APIs](./api/index.md)
+  - [API reference](./api/index.md)
+    - [API specification](./api/specification.md)

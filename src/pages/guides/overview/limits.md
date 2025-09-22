@@ -16,11 +16,9 @@ API rate limits are a standard practice designed to:
 
 ## Handling rate limit errors
 
-When the client-specific or global access limit is exceeded, the API responds with an HTTP **429 Too Many Requests** error. This response includes a **Retry-After** header, which indicates the minimum time the client must wait before making another request. For detailed specifications, refer to [RFC 7231](https://dummy-link-to-rfc7231.com).
+When the client-specific or global access limit is exceeded, the API responds with an HTTP **429 Too Many Requests** error. This response includes a **Retry-After** header, which indicates the minimum time the client must wait before making another request. For detailed specifications, refer to [RFC 7231](https://datatracker.ietf.org/doc/html/rfc7231#section-7.1.3).
 
 To address this error, consider the following actions:
 
 - Review your usage and reduce unnecessary requests.
-- Implement retry logic using **retry-after** HTTP header or an exponential backoff strategy.
-
-![Dummy image](https://dummyimage.com/600x200/cccccc/000000&text=Rate+Limits+Illustration)
+- Implement retry logic using [Retry-After HTTP header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Retry-After) or an [exponential backoff strategy](https://en.wikipedia.org/wiki/Exponential_backoff).

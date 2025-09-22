@@ -8,11 +8,11 @@ Configure and manage Content Retention Policies for inactive users to define how
 
 ## Prerequisites
 
-Before you can use the Adobe Admin APIs, you must use the **Adobe Developer Console** to create a development project. The integration registers your application as a client of the Adobe Admin API, and gives you the credentials you need to authorize calls to the API.
+Before you can use the Adobe Admin APIs, you must use the [Adobe Developer Console](https://developer.adobe.com/) to create a development project. The integration registers your application as a client of the Adobe Admin API, and gives you the credentials you need to authorize calls to the API.
 
-For information on setting up an **Adobe Developer Console** project, see [Developer Console](https://dummy-link-to-developer-console.com).
+For information on setting up an **Adobe Developer Console** project, see [Developer Console](./console.md).
 
-For information about client credential authentication and retrieving **Client ID**, **Client Secret**, **Scopes**, or access tokens, see [Authentication Setup](https://dummy-link-to-authentication-setup.com).
+For information about client credential authentication and retrieving Client ID, Client Secret, Scopes, or access tokens, see [Authentication Setup](./authentication.md).
 
 ## Make your first API call
 
@@ -33,8 +33,6 @@ Congratulations! You have just made your first request to the Adobe Admin API.
 
 ## Deepen your understanding
 
-Explore the [Working with Adobe Admin APIs](https://dummy-link-to-quick-start.com) tutorial for a working example of the Adobe Admin API's capabilities.
+Explore the [Working with Adobe Admin APIs](../quick-start/index.md) tutorial for a working example of the Adobe Admin API's capabilities.
 
 See the [API Reference](https://dummy-link-to-api-reference.com) for details about the Adobe Admin API functions.
-
-![Dummy image](https://dummyimage.com/600x200/cccccc/000000&text=Adobe+Admin+APIs)

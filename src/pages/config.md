@@ -16,6 +16,6 @@
   - [Getting started](./guides/getting-started/index.md)
     - [Generate API key and access token through Adobe Developer Console](./guides/getting-started/console.md)
     - [Authentication setup](./guides/getting-started/authentication.md)
-  - [Working with Adobe Admin APIs](./api/index.md)
+  - [Working with Adobe Admin APIs](./guides/quick-start/index.md)
   - [API reference](./api/index.md)
     - [API specification](./api/specification.md)

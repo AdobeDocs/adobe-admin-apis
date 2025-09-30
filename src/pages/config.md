@@ -1,5 +1,5 @@
 - pathPrefix:
-  - /adobe-admin-apis/
+  - /adobe-admin-apis-storage-management/
 
 - pages:
 

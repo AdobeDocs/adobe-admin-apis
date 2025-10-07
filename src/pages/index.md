@@ -1,5 +1,5 @@
 ---
-title: Overview - Adobe Admin APIs
+title: Overview - Adobe Admin APIs for Storage Management
 description: An overview of the Adobe Admin APIs
 keywords:
   - Adobe Admin Console
@@ -11,22 +11,22 @@ contributors:
 
 <HeroSimple slots="heading, text"/>
 
-# Adobe Admin APIs
+# Adobe Admin APIs - Storage Management
 
-The Adobe Admin APIs provide all Enterprise customers with free, programmatic access to a standard set of administrative capabilities, regardless of their product mix.
+Adobe storage for business provides enterprise organisations with a centralised platform to store digital assets and collaborate seamlessly across various Adobe applications, from any device or location. The Adobe Admin APIs for Storage Management provide all Enterprise customers with free, programmatic access to manage content stored in Adobe storage for business.
 
 <Resources slots="heading, links"/>
 
  Resources
 
-- [Working with Adobe Admin APIs](./guides/getting-started/index.md)
+- [Working with Adobe Admin APIs for Storage Management](./guides/quick-start/index.md)
 - [API reference](./api/specification.md)
 
 ## Overview
 
-Using the Adobe Admin APIs, you can automate the Adobe Admin Console by integrating Adobe Admin APIs into your workflows, scripts, and tools.
+The Adobe Admin APIs for Storage Management provide all Enterprise customers with free, programmatic access to a standard set of storage management capabilities to manage content stored in Adobe storage for business.
 
-With the Adobe Admin APIs, you can configure and manage a Content Retention Policy for your organization's inactive users' assets stored in Adobe Cloud Storage.
+With the Adobe Admin APIs for Storage Management, you can configure and manage a Content Retention Policy for your organisation's inactive users' assets stored in Adobe  Storage for business.
 
 ## What you’ll learn
 
@@ -40,4 +40,5 @@ This documentation will guide you through:
 
 - [Overview](./guides/index.md)
 - [Getting Started Guide](./guides/getting-started/index.md)
+- [Working with Adobe Admin APIs for Storage Management](./guides/quick-start/index.md)
 - [API Reference](./api/index.md)

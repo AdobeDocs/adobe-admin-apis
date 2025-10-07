@@ -1,4 +1,4 @@
-# Working with Admin APIs
+# Working with Adobe Admin APIs for Storage Management
 
 This guide outlines the essential steps to get started with Adobe Admin APIs. It covers how to set up your Developer Console project, configure access and permissions, retrieve credentials, and test endpoints for policy management and other administrative tasks.
 

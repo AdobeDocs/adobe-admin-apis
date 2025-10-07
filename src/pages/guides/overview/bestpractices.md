@@ -1,6 +1,6 @@
-# Best practices for Adobe Admin APIs
+# Best practices for Adobe Admin APIs - Storage Management
 
-The Adobe Admin APIs provide powerful functionality for developers to integrate Adobe's Administrative capabilities into their workflows, scripts, and tools. To ensure efficient and effective use of the APIs, it is important to follow best practices. This document outlines key recommendations for using the Adobe Admin APIs.
+The Adobe Admin APIs for Storage Management provide powerful functionality for developers to integrate Adobe's storage management capabilities into their workflows, scripts, and tools. To ensure efficient and effective use of the APIs, it is important to follow best practices. This document outlines key recommendations for using the Adobe Admin APIs for Storage Management.
 
 ## Authentication and client credentials
 

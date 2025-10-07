@@ -1,6 +1,6 @@
 # Rate limits
 
-The Adobe Admin APIs enforce default rate limits on the volume and frequency of API calls.
+The Adobe Admin APIs for Storage Management enforce default rate limits on the volume and frequency of API calls.
 
 ## Summary of rate limits
 

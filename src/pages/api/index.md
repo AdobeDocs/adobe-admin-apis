@@ -1,21 +1,21 @@
 # API reference
 
-The Adobe Admin APIs provide enterprise customers complimentary, programmatic access to a standardized set of administrative capabilities,  regardless of their product mix. Using the Adobe Admin APIs, you can automate the Adobe Admin Console by integrating these APIs into your workflows, scripts, and tools.
+The Adobe Admin APIs for Storage Management provide all Enterprise customers with free, programmatic access to a standard set of storage management capabilities to manage content stored in Adobe storage for business. This enables them to integrate Adobe's storage management capabilities into their workflows, scripts, and tools to automate storage management.
 
 ## Connecting to the Adobe Admin APIs
 
-Before using the Adobe Admin APIs, you must create a development project in the **Adobe Developer Console**. This integration registers your application as a client of the Adobe Admin APIs, and provides the necessary credentials to authorize API calls.
+Before using the Adobe Admin APIs for Storage Management, you must create a development project in the **Adobe Developer Console**. This integration registers your application as a client of the Adobe Admin APIs for Storage Management, and provides the necessary credentials to authorize API calls.
 
 - For setup instructions, refer to [Developer Console](https://developer.adobe.com/).  
 - For details on client credential authentication, including how to retrieve your Client ID, Client Secret, Scopes, and access tokens, refer to  [Authentication Setup](https://developer-stage.adobe.com/cloud-storage/guides/getting-started/authentication).
 
-## Adobe Admin API Calls
+## API calls
 
-Adobe Admin APIs provide enterprise organizations with programmatic control over administrative tasks in the Adobe Admin Console. These APIs allow you to integrate Adobe’s administrative features into your internal systems, streamlining and automating processes such as configuring a Content Retention Policy for inactive user assets and more.
+Read more complete overview of [available storage management capabilities](../guides/overview/capabilities.md).
 
-For a complete overview of available features, see [Administrative Capabilities](../guides/overview/capabilities.md).
+With these APIs, you can configure and manage a Content Retention Policy for your organization's inactive users' assets and more.
 
-All API requests should be directed to the Adobe Admin API server:
+All API requests should be directed to the Adobe Admin API for Storage Management  server:
 
 ```json
 https://cloudstorage.adobe.io/v1

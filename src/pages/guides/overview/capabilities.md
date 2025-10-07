@@ -1,6 +1,6 @@
-# Administrative capabilities
+# Storage management capabilities
 
-Adobe Admin APIs provide enterprise organizations with programmatic control over administrative tasks in the Adobe Admin Console, enabling them to integrate Adobe's administrative capabilities into their workflows, scripts, and tools to automate administrative processes. Each capability addresses a specific need for managing organizational assets stored in Adobe Cloud Storage.
+The Adobe Admin APIs for Storage Management provide powerful functionality for developers to integrate Adobe's storage management capabilities into their workflows, scripts, and tools. Each capability addresses a specific need for managing content stored in Adobe storage for business.
 
 ## Content retention policy for inactive users
 

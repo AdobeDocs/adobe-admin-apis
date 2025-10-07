@@ -4,27 +4,23 @@ Learn how to authenticate requests to the Adobe Admin APIs.
 
 ## Overview
 
-Every request made to Adobe Admin APIs must include an encrypted access token. Your secure, server-side application retrieves an access token by making a request to the [Adobe Identity Management System (IMS)](https://www.adobe.com/content/dam/cc/en/trust-center/ungated/whitepapers/corporate/adobe-identity-management-services-security-overview.pdf), using your Client ID and Client Secret.
+Every request made to the Adobe Admin APIs for Storage Management must include an encrypted access token. Your secure, server-side application retrieves an access token by making a request to the [Adobe Identity Management System (IMS)](https://www.adobe.com/content/dam/cc/en/trust-center/ungated/whitepapers/corporate/adobe-identity-management-services-security-overview.pdf), using your Client ID and Client Secret.
 
 ## Prerequisites
 
 This document assumes you have worked with your organization's Administrator and have the following:
 
 - A user account with a **Developer** role authorized for an Adobe product that uses Enterprise Storage. This grants access to the [Adobe Developer Console](https://developer.adobe.com/).
-- An [Adobe Developer Console project](https://developer.adobe.com/developer-console/docs/guides/projects/projects-empty/) configured with either OAuth server-to-server or OAuth user authentication credentials for the Adobe Cloud Storage and Collaboration APIs.
+- An [Adobe Developer Console project](https://developer.adobe.com/developer-console/docs/guides/projects/projects-empty/) configured with OAuth server-to-server.
 - Access to your Client ID and Client Secret from the Adobe Developer Console project. Securely store these credentials and never expose them in client-side or public code.
 
 For more information about setting up an Adobe Developer Console project, see [Adobe Developer Console](https://developer.adobe.com/).
 
 ## Authentication types
 
-The Adobe Admin APIs support Server-to-Server authentication using OAuth Server-to-Server credentials. This authentication method is designed for different use cases, depending on whether your application acts independently or on behalf of a user.
+The Adobe Admin APIs for Storage Management support Server-to-Server authentication using OAuth Server-to-Server credentials. This authentication method is designed for different use cases, depending on whether your application acts independently or on behalf of a user.
 
-For a detailed comparison and implementation guidance, refer to [Adobe Developer Authentication Guide](https://developer.adobe.com/cloud-storage/guides/getting-started/authentication).
-
-### Server-to-Server authentication
-
-Use Server-to-Server authentication if your application needs to execute actions on Adobe cloud storage content without involving a user.
+For detailed implementation guidance, refer to [Adobe Developer Authentication Guide](https://developer.adobe.com/cloud-storage/guides/getting-started/authentication).
 
 #### Retrieve a Server-to-Server access token
 

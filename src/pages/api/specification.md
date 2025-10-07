@@ -1,1 +1,1 @@
-<RedoclyAPIBlock src="/adobe-admin-apis/index.yml" />
+<RedoclyAPIBlock src="/index.yml" />

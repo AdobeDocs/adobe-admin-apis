@@ -7,7 +7,7 @@ The **Adobe Developer Console** is an administration interface that enables deve
 Enterprise users must be assigned the **System Administrator** or **Developer** role in the Adobe Admin Console to access the Adobe Developer Console.
 
 - Identify an Adobe Admin in your organization. This may be as simple as checking the notes in your Adobe account, or you can ask your Adobe solution consultant for the appropriate contact.
-- Ask the Admin to set up either **System Administrator** or **Developer roles** for users who need to generate API keys.
+- Ask the Admin to set up either **System Administrator** or **Storage Administrator** role and provide developer access to use the Admin APIs, for users who need to generate API keys.
     - Alternatively, ask your Admin to generate the keys if they prefer not to elevate roles.
 - If your Admin allows you to generate your API keys, the Admin must also assign an Adobe product that uses Enterprise Storage to you in the Admin Console.
 

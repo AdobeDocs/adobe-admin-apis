@@ -8,7 +8,7 @@ Enterprise users must be assigned the **System Administrator** or **Developer** 
 
 - Identify an Adobe Admin in your organization. This may be as simple as checking the notes in your Adobe account, or you can ask your Adobe solution consultant for the appropriate contact.
 - Ask the Admin to set up either **System Administrator** or **Storage Administrator** role and provide developer access to use the Admin APIs, for users who need to generate API keys.
-    - Alternatively, ask your Admin to generate the keys if they prefer not to elevate roles.
+  - Alternatively, ask your Admin to generate the keys if they prefer not to elevate roles.
 - If your Admin allows you to generate your API keys, the Admin must also assign an Adobe product that uses Enterprise Storage to you in the Admin Console.
 
 ## Steps to generate an API Key and access token
@@ -28,7 +28,7 @@ Follow these steps to create a project and generate credentials in the Adobe Dev
 
    ![Add API](./images/add-api.jpg)
 
-3. Select **Adobe Admin APIs - Storage Management** and click **Next**:
+2. Select **Adobe Admin APIs - Storage Management** and click **Next**:
 
      ![Pick Adobe Admin APIs - Storage Management option](./images/pick-cloudstorage-api.jpg)
 
@@ -47,11 +47,9 @@ Choose the appropriate product profile(s) and select **Save configured API**.
 
 ![Choose product profile](./images/choose_profile.jpg)
 
-### Step 5: Add More Authentication Credentials and APIs
+### Step 5: View Connected Credentials and APIs
 
-You can add other credentials using the **Connect another credential** button on the **Developer Console** project page.
-
-To add more APIs to your project, repeat [step 2](#step-2-add-the-api-to-your-project) until all required APIs are included.
+You can view the credentials on the **Developer Console** project page.
 
 ![Connect another credential](./images/connect_another_credential.jpg)
 

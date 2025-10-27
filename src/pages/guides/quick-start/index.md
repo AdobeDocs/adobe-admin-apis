@@ -1,10 +1,10 @@
 # Working with Adobe Admin APIs for Storage Management
 
-This guide outlines the essential steps to get started with Adobe Admin APIs. It covers how to set up your Developer Console project, configure access and permissions, retrieve credentials, and test endpoints for policy management and other administrative tasks.
+This guide outlines the essential steps to get started with Adobe Admin APIs for Storage Management. It covers how to set up your Developer Console project, configure access and permissions, retrieve credentials, and test endpoints to manage content stored in Adobe storage for business.
 
 ## Prerequisites
 
-To use the Admin APIs, the user must have developer rights within the Adobe organization. This involves:
+To use the Adobe Admin APIs for Storage Management, the user must have developer rights within the Adobe organization. This involves:
 
 - Adding the user as a developer in the organization.
 - Assigning the necessary products for the developer APIs.
@@ -13,7 +13,7 @@ To use the Admin APIs, the user must have developer rights within the Adobe orga
 
 1. Log in to the [Adobe Developer Console](https://developer.adobe.com/).
 2. Create a project or open an existing one.
-3. Add **Adobe Admin APIs** to your project.
+3. Add **Adobe Admin APIs -  Storage Management** to your project.
 4. Configure the API to use server-to-server authentication. This setup allows your server to securely store client secrets and generate access tokens without user interaction.
 
 ## Step 2: Configure access and permissions
@@ -31,15 +31,17 @@ To use the Admin APIs, the user must have developer rights within the Adobe orga
 
 2. You can generate an access token directly from the Developer Console UI or programmatically by using these credentials to request a v3 access token.
 
-## Step 4: Testing Admin API endpoints
+## Step 4: Testing API endpoints
 
 For quick testing and exploration, you can use the generated access token to authorize requests on the [Swagger UI](../../api/specification.md).
 
-Here, you can interact with Admin API endpoints, including policy-related operations for admin users, to verify your setup and understand how the APIs work.
+Here, you can interact with Adobe Admin APIs for Storage Management’s endpoints, including policy-related operations for admin users, to verify your setup and understand how the APIs work.
 
-## Admin APIs: Policy management
+## Step 5: Managing content with Adobe Admin APIs for Storage Management
 
-To manage Admin policies in your organization, you can retrieve and update policies using the Admin APIs. Policies define rules such as data retention periods or content purging for inactive users.
+The _Content Retention Policy for Inactive User_ defines rules such as retention periods and content deletion criteria for inactive users, automatically triggering the permanent deletion of user assets once the defined retention period expires.
+
+To use this policy for your organization, you can configure, retrieve, and update it using the APIs described below.
 
 ### Policy object
 
@@ -47,8 +49,53 @@ The following policy objects are available:
 
 - `policyType`: A string representing the type of policy (Example:  `inactive_user_content_purge`).  
 - `attributes`: An object containing policy-specific settings, including:  
-    o `enabled` (boolean): Whether the policy is active.  
-    o `retention` (string, optional): Retention period in ISO 8601 format.
+  - `enabled` (boolean): Whether the policy is active.  
+  - `retention` (string, optional): Retention period in ISO 8601 format.
+
+### Enabling policy
+
+Use a `PATCH` request to enable the policy.
+
+#### Request
+
+```bash
+curl -X PATCH \
+  'https://cloudstorage-stage.adobe.io/v1/policies/org/inactive_user_content_purge' \
+  -H 'accept: application/json' \
+  -H 'If-Match: "your-current-etag-value"' \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
+  -H 'Content-Type: application/json-patch+json' \
+  -d '[
+    {
+      "op": "replace",
+      "path": "/attributes/enabled",
+      "value": "true"
+    }
+  ]'
+```
+
+Replace `YOUR_ACCESS_TOKEN` with a valid OAuth access token.  
+The `If-Match` header includes the ETag(s) for optimistic concurrency control.
+
+#### Response
+
+Sample response:
+
+```json
+{
+  "policyType": "inactive_user_content_purge",
+  "attributes": {
+    "enabled": true,
+    "retention": "P2Y"
+  }
+}
+```
+
+**Response parameters**
+
+- `policyType`: The type of the policy
+- `attributes.enabled`: Whether the policy is enabled (`true`) or disabled (`false`)
+- `attributes.retention`: Retention period using ISO 8601 duration format (`P2Y` means 2 years)
 
 ### Get policy details
 
@@ -57,11 +104,11 @@ Use the `GET Policy details` API to retrieve the details of a specific policy fo
 #### Request
 
 ```bash
-curl -X GET \
-    'https://dummy-link.com/v1/policies/org/inactive_user_content_purge' \
-    -H 'accept: application/json' \
-    -H 'x-request-id: 1234567890' \
-    -H 'Authorization: Bearer YOUR_ACCESS_TOKEN_HERE'
+curl -X GET \ 
+    'https://cloudstorage-stage.adobe.io/v1/policies/org/inactive_user_content_purge' \ 
+    -H 'accept: application/json' \ 
+    -H 'x-request-id: 1234567890' \ 
+    -H 'Authorization: Bearer YOUR_ACCESS_TOKEN_HERE' 
 ```
 
 Replace `YOUR_ACCESS_TOKEN_HERE` with a valid OAuth access v3 token.
@@ -86,40 +133,30 @@ Response parameters:
 - `attributes.enabled`: Whether the policy is enabled (true) or disabled (false)
 - `attributes.retention`: Retention period using ISO 8601 duration format (P2Y means 2 years)
 
-### Update policy
+### Disabling policy
 
-Use a `PATCH request` to modify attributes of an existing policy.
+Use a PATCH request to disable the policy.
 
 #### Request
 
 ```bash
 curl -X PATCH \
-    'https://dummy-link.com/v1/policies/org/inactive_user_content_purge' \
-    -H 'accept: application/json' \
-    -H 'If-Match: "33a64df551425fcc55e4d42a148795d9f25f89d4", W/"0815"' \
-    -H 'x-request-id: 1234567890' \
-    -H 'Authorization: Bearer YOUR_ACCESS_TOKEN_HERE' \
-    -H 'Content-Type: application/json-patch+json' \
-    -d '[
-        {
-            "op": "replace",
-            "path": "/attributes/enabled",
-            "value": false
-        },
-        {
-            "op": "remove",
-            "path": "/attributes/retention"
-        },
-        {
-            "op": "add",
-            "path": "/attributes/retention",
-            "value": "P2Y"
-        }
-    ]'
+  'https://cloudstorage-stage.adobe.io/v1/policies/org/inactive_user_content_purge' \
+  -H 'accept: application/json' \
+  -H 'If-Match: "your-current-etag-value"' \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
+  -H 'Content-Type: application/json-patch+json' \
+  -d '[
+    {
+      "op": "replace",
+      "path": "/attributes/enabled",
+      "value": "false"
+    }
+  ]'
 ```
 
-Replace `YOUR_ACCESS_TOKEN_HERE` with a valid OAuth access token.  
-The If-Match header includes the ETag(s) for optimistic concurrency control.
+Replace `YOUR_ACCESS_TOKEN` with a valid OAuth access token.  
+The `If-Match` header includes the ETag(s) for optimistic concurrency control.
 
 #### Response
 
@@ -127,10 +164,50 @@ Sample response:
 
 ```json
 {
-    "policyType": "inactive_user_content_purge",
-    "attributes": {
-        "enabled": true,
-        "retention": "PT5M"
+  "policyType": "inactive_user_content_purge",
+  "attributes": {
+    "enabled": false,
+    "retention": "P2Y"
+  }
+}
+```
+
+### Updating retention period
+
+Use a PATCH request to modify retention of an existing policy.
+
+#### Request
+
+```bash
+curl -X PATCH \
+  'https://cloudstorage-stage.adobe.io/v1/policies/org/inactive_user_content_purge' \
+  -H 'accept: application/json' \
+  -H 'If-Match: "your-current-etag-value"' \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
+  -H 'Content-Type: application/json-patch+json' \
+  -H 'x-request-id: 123e4567-e89b-12d3-a456-426614174000' \
+  -d '[
+    {
+      "op": "replace",
+      "path": "/attributes/retention",
+      "value": "P5Y"
     }
+  ]'
+```
+
+Replace `YOUR_ACCESS_TOKEN` with a valid OAuth access token.  
+The `If-Match` header includes the ETag(s) for optimistic concurrency control.
+
+#### Response
+
+Sample response:
+
+```json
+{
+  "policyType": "inactive_user_content_purge",
+  "attributes": {
+    "enabled": true,
+    "retention": "P5Y"
+  }
 }
 ```

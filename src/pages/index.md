@@ -13,7 +13,7 @@ contributors:
 
 # Adobe Admin APIs - Storage Management
 
-Adobe storage for business provides enterprise organisations with a centralised platform to store digital assets and collaborate seamlessly across various Adobe applications, from any device or location.
+Adobe Admin APIs for Storage Management provide enterprise customers with free, programmatic access to a standard set of storage management capabilities to manage content stored in Adobe storage for business.
 
 <Resources slots="heading, links"/>
 

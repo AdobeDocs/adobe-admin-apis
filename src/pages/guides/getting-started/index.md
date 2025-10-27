@@ -33,6 +33,5 @@ Congratulations! You have just made your first request to the Adobe Admin API fo
 
 ## Deepen your understanding
 
-Explore the [Working with Adobe Admin API for Storage Management](../quick-start/index.md) tutorial for a working example of the API's storage management capabilities.
-
-See the [API Reference](https://dummy-link-to-api-reference.com) for details about the API functions.
+- Explore the [Working with Adobe Admin API for Storage Management](../quick-start/index.md) tutorial for a working example of the API's storage management capabilities.
+- See the [API Reference](../../api/index.md) for details about the API functions.

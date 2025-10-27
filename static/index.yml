@@ -2,8 +2,7 @@ openapi: 3.0.3
 info:
   title: Adobe Admin APIs
   description: |
-    The Policies APIs within the Adobe Admin APIs framework provide a structured and secure way to define, retrieve, and manage governance rules across Adobe enterprise environments. 
-    These APIs are essential for administrators seeking fine-grained control over how assets and operations are accessed and managed.
+    The Policies APIs within the Adobe Admin APIs for Storage Management framework provide a structured and secure way to define, retrieve, and manage retention policies across Adobe enterprise environments. These APIs are essential for administrators seeking fine-grained control over how assets are managed.
   version: v1
 servers:
   - url: https://cloudstorage-stage.adobe.io/v1
@@ -17,7 +16,7 @@ security:
 tags:
   - name: Policies
     description: |
-      Represents a set of rules that govern how assets and operations are managed and accessed within the system.
+      Represents a set of rules that governs how assets are managed within the system.
     x-audience: stage
 paths:
  /policies/org/{policyType}:

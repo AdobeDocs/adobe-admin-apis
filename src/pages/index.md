@@ -13,7 +13,7 @@ contributors:
 
 # Adobe Admin APIs - Storage Management
 
-Adobe Admin APIs for Storage Management provide enterprise customers with free, programmatic access to a standard set of storage management capabilities to manage content stored in Adobe storage for business.
+Programmatically access storage management capabilities to manage content stored in Adobe storage for business.
 
 <Resources slots="heading, links"/>
 

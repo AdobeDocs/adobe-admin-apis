@@ -54,7 +54,7 @@ The following policy objects are available:
 
 ### Enabling policy
 
-Use a `PATCH` request to enable the policy.
+Use a `PATCH` request to enable the policy. The default retention period is 2 years, which can be customised to any duration between 30 days and 10 years (specified in months or years) using the ISO 8601 duration format.
 
 #### Request
 

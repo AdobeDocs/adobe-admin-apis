@@ -1,13 +1,13 @@
 openapi: 3.0.3
 info:
-  title: Adobe Admin APIs
+  title: Adobe Admin APIs - Storage Management
   description: |
+    # Overview
+
     The Policies APIs within the Adobe Admin APIs for Storage Management framework provide a structured and secure way to define, retrieve, and manage retention policies across Adobe enterprise environments. These APIs are essential for administrators seeking fine-grained control over how assets are managed.
+    
   version: v1
 servers:
-  - url: https://cloudstorage-stage.adobe.io/v1
-    description: Staging Server
-    x-audience: stage
   - url: https://cloudstorage.adobe.io/v1
     description: Production Server
     x-audience: prod
@@ -17,10 +17,8 @@ tags:
   - name: Policies
     description: |
       Represents a set of rules that governs how assets are managed within the system.
-    x-audience: stage
 paths:
- /policies/org/{policyType}:
-    x-audience: stage
+  /policies/org/{policyType}:
     get:
       operationId: getPolicy
       summary: Get a policy by policyType
@@ -106,11 +104,14 @@ components:
         - cursor_expired
         - precondition_failed
         - etag_mismatch
+        - payload_too_large
         - invalid_content_type
         - validation_error
+        - resource_too_large
         - rate_limited
         - runtime_error
         - not_implemented
+        - operation_timeout
         - storage_quota_exceeded
     assetTypeEnums:
       type: string
@@ -154,6 +155,7 @@ components:
         ---
       enum:
         - file_upload
+        - file_download
         - copy_asset
         - move_asset
         - package_asset
@@ -291,8 +293,8 @@ components:
           description: Current state of the asset
           enum:
             - active
-            - discarded
-            - discarded_parent
+            - deleted
+            - deleted_parent
           default: active
     projectAsset:
       type: object
@@ -341,10 +343,6 @@ components:
       minLength: 1
       maxLength: 255
       nullable: false
-    etag:
-      type: string
-      description: Entity tag used for optimistic concurrency control
-      example: 33a64df551425fcc55e4d42a148795d9f25f89d4
     fileAsset:
       type: object
       title: FileAsset
@@ -366,15 +364,10 @@ components:
               format: int64
               minimum: 0
               example: 1048576
-            contentEtag:
-              allOf:
-                - $ref: "#/components/schemas/etag"
-              description: ETag of the file content's
           required:
             - assetType
             - mediaType
             - size
-            - contentEtag
     folderAsset:
       type: object
       title: FolderAsset
@@ -755,6 +748,31 @@ components:
       title: URL
       description: A URL for the asset
       format: uri
+    fileDownloadOKResponse:
+      title: FileDownloadOKResponse
+      description: A pre-signed download URL for the asset
+      properties:
+        url:
+          allOf:
+            - $ref: "#/components/schemas/url"
+          description: The pre-signed URL that supports HTTP range requests for partial downloads
+        urlExpirationDate:
+          allOf:
+            - $ref: "#/components/schemas/date"
+          description: The expiration date of the pre-signed URL
+        size:
+          type: integer
+          description: Size of the file in bytes
+          format: int64
+          minimum: 0
+        mediaType:
+          type: string
+          description: The MIME type of the file
+      example:
+        mediaType: application/zip
+        size: 234567890
+        url: https://<storage-url>/download?signature=abc123
+        urlExpirationDate: "2025-05-13T10:15:30Z"
     fileSize:
       type: integer
       title: FileSize
@@ -853,6 +871,22 @@ components:
       required:
         - assets
         - status
+    fileDownloadSucceededJobStatus:
+      type: object
+      title: FileDownloadSucceededJobStatus
+      description: Represents the status of a file download succeeded asynchronous job in the system
+      allOf:
+        - $ref: "#/components/schemas/baseJobStatus"
+        - type: object
+          properties:
+            status:
+              type: string
+              default: succeeded
+            downloadResponse:
+              $ref: "#/components/schemas/fileDownloadOKResponse"
+      required:
+        - downloadResponse
+        - status
     succeededJobStatus:
       description: |
         Represents the status of a succeeded asynchronous job in the system
@@ -861,11 +895,13 @@ components:
       oneOf:
         - $ref: "#/components/schemas/fileUploadSucceededJobStatus"
         - $ref: "#/components/schemas/packageAssetSucceededJobStatus"
+        - $ref: "#/components/schemas/fileDownloadSucceededJobStatus"
       discriminator:
         propertyName: jobType
         mapping:
           file_upload: "#/components/schemas/fileUploadSucceededJobStatus"
           package_asset: "#/components/schemas/packageAssetSucceededJobStatus"
+          file_download: "#/components/schemas/fileDownloadSucceededJobStatus"
     failedJobStatus:
       type: object
       title: FailedJobStatus
@@ -1070,17 +1106,6 @@ components:
         The ID of the asset to get.
       schema:
         $ref: "#/components/schemas/assetId"
-    ifNoneMatch:
-      name: If-None-Match
-      in: header
-      schema:
-        type: string
-        example: \"33a64df551425fcc55e4d42a148795d9f25f89d4\", W/\"0815\"
-      required: false
-      description: |
-        One or more ETag values to compare, separated by commas.  
-        The request will succeed only if the resource's current ETag does **not** match any of the provided values.
-        This allows clients to avoid unnecessary data transfer if the resource has not changed since their last fetch.
     assetsSortBy:
       name: sortBy
       in: query
@@ -1136,17 +1161,6 @@ components:
         default: 14400
         minimum: 60
         maximum: 14400
-    ifMatch:
-      name: If-Match
-      in: header
-      schema:
-        type: string
-        example: \"33a64df551425fcc55e4d42a148795d9f25f89d4\", W/\"0815\"
-      required: false
-      description: |
-        One or more ETag values to compare, separated by commas.
-        The request will succeed only if the resource's current ETag matches any of the provided values.
-        This allows clients to prevent resource conflicts when multiple clients try to update the same resource simultaneously.
     size:
       name: size
       in: query
@@ -1175,6 +1189,17 @@ components:
         The type of policy.
       schema:
         $ref: "#/components/schemas/policyType"
+    ifMatch:
+      name: If-Match
+      in: header
+      schema:
+        type: string
+        example: \"33a64df551425fcc55e4d42a148795d9f25f89d4\", W/\"0815\"
+      required: false
+      description: |
+        One or more ETag values to compare, separated by commas.
+        The request will succeed only if the resource's current ETag matches any of the provided values.
+        This allows clients to prevent resource conflicts when multiple clients try to update the same resource simultaneously.
   headers:
     requestId:
       schema:
@@ -1390,6 +1415,12 @@ components:
       value:
         error_code: validation_error
         message: The provided name has an invalid value.
+    invalidAssetIdValue:
+      description: |
+        **Invalid AssetId Value** - The server cannot proceed because the assetId is invalid
+      value:
+        error_code: validation_error
+        message: The provided assetId has an invalid value.
     accessError:
       description: |
         **Access Error** - Access to a resource is denied
@@ -1402,24 +1433,6 @@ components:
       value:
         error_code: resource_not_found
         message: The requested resource (urn:uuid:123e4567-e89b-12d3-a456-426614174000) was not found.
-    storageQuotaExceeded:
-      description: |
-        **Storage Quota Exceeded** - The user has exceeded their storage quota
-      value:
-        error_code: storage_quota_exceeded
-        message: Your quota has been exceeded. Please try later after cleanup or contact support.
-    200.projectDiscard:
-      value:
-        assetId: urn:aaid:sc:US:4f2fc15c-c062-4951-b37b-1f65ed62a174
-        name: My New Project
-        createdDate: "2024-01-05T14:00:00Z"
-        modifiedDate: "2024-01-10T10:25:30Z"
-        createdBy: 08D81E3B665BE5640A495C2C@AdobeOrg
-        modifiedBy: 08D81E3B665BE5640A495C2C@AdobeOrg
-        path: /My New Project
-        ancestors: []
-        assetType: project
-        state: discarded
     paginatedAssets:
       description: |
         **Paginated Assets** - The server successfully retrieved the assets
@@ -1449,7 +1462,6 @@ components:
             path: /Marketing Launch Plan/logo.png
             ancestors:
               - urn:aaid:sc:US:11111111-aaaa-bbbb-cccc-222222222222
-            contentEtag: "1683839000010"
             mediaType: image/png
             size: 2418293
             state: active
@@ -1520,18 +1532,6 @@ components:
       value:
         error_code: access_error
         message: You do not have permission to create folders.
-    200.folderDiscard:
-      value:
-        assetId: urn:aaid:sc:US:4f2fc15c-c062-4951-b37b-1f65ed62a174
-        name: My New Folder
-        createdDate: "2024-01-05T14:00:00Z"
-        modifiedDate: "2024-01-10T10:25:30Z"
-        createdBy: 08D81E3B665BE5640A495C2C@AdobeOrg
-        modifiedBy: 08D81E3B665BE5640A495C2C@AdobeOrg
-        path: /My New Folder
-        ancestors: []
-        assetType: folder
-        state: discarded
     singleFile:
       value:
         assetType: file
@@ -1544,26 +1544,9 @@ components:
         path: /Marketing Launch Plan/logo.png
         ancestors:
           - urn:aaid:sc:US:11111111-aaaa-bbbb-cccc-222222222222
-        contentEtag: "1683839000010"
         mediaType: image/png
         size: 2418293
         state: active
-    200.fileDiscard:
-      value:
-        assetType: file
-        assetId: urn:aaid:sc:US:22222222-aaaa-bbbb-cccc-333333333333
-        name: logo.png
-        createdDate: "2024-02-20T09:10:00Z"
-        modifiedDate: "2024-03-05T11:20:00Z"
-        createdBy: 08D81E3B665BE5640A495C2C@AdobeOrg
-        modifiedBy: 08D81E3B665BE5640A495C2C@AdobeOrg
-        path: /Marketing Launch Plan/logo.png
-        ancestors:
-          - urn:aaid:sc:US:11111111-aaaa-bbbb-cccc-222222222222
-        contentEtag: "1683839000010"
-        mediaType: image/png
-        size: 2418293
-        state: discarded
     etagMismatch:
       description: |
         **Precondition Failed** - The request failed due to a precondition
@@ -1788,6 +1771,8 @@ components:
               $ref: "#/components/examples/invalidNameType"
             invalidNameValue:
               $ref: "#/components/examples/invalidNameValue"
+            invalidAssetIdValue:
+              $ref: "#/components/examples/invalidAssetIdValue"
     matchedEtagResponse:
       description: |
         **Success** - The ETag of the asset matches the etag provided in the headers.
@@ -1823,19 +1808,6 @@ components:
           examples:
             resourceNotFound:
               $ref: "#/components/examples/resourceNotFound"
-    storageQuotaExceededResponse:
-      description: |
-        **Insufficient Storage** - The request cannot be processed because the storage quota has been exceeded
-      headers:
-        x-request-id:
-          $ref: "#/components/headers/requestId"
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/errorResponse"
-          examples:
-            storageQuotaExceeded:
-              $ref: "#/components/examples/storageQuotaExceeded"
     paginatedAssetsResponse:
       description: |
         **Success** - Paginated response containing an array of object with each element containing basic information about the project,
@@ -1869,7 +1841,7 @@ components:
             assetPermission:
               value:
                 role: edit
-    200.getAssetPermissions:
+    getAssetPermissionsResponse:
       description: |
         **Success** - A list of collaborators and their permissions for the asset
       headers:
@@ -1882,7 +1854,7 @@ components:
           examples:
             All Permissions:
               $ref: "#/components/examples/200.assetPermissions"
-    200.patchAssetPermissions:
+    patchAssetPermissionsResponse:
       description: |
         **Success/Partial Success**  
         Patching the permissions was tried and from the response body result of each request can be
@@ -1928,31 +1900,6 @@ components:
                 - status: successful
                   id: A495C2C08D81E3B665BE5640@e
                   type: user
-    packageAssetResponse:
-      description: |
-        **Success** - Asynchronous job id along with monitor url
-      headers:
-        x-request-id:
-          $ref: "#/components/headers/requestId"
-        location:
-          $ref: "#/components/headers/location"
-        retry-after:
-          $ref: "#/components/headers/retryAfter"
-      content:
-        application/json:
-          schema:
-            type: object
-            title: packageAssetResponse
-            description: Asynchronous job id along with monitor url
-            properties:
-              jobId:
-                type: string
-                description: The asynchronous job id
-                example: 123e4567-e89b-12d3-a456-426614174000
-          examples:
-            packageAssetResponse:
-              value:
-                jobId: 85f7c90a-a252-4e82-8cf3-3c989829cdf9
     accessErrorFolderCreateResponse:
       description: |
         **Forbidden** - The user does not have permission to create folders
@@ -1966,7 +1913,7 @@ components:
           examples:
             accessFolderCreateError:
               $ref: "#/components/examples/accessErrorFolderCreate"
-    fileDownloadUrlResponse:
+    fileDownloadOKResponse:
       description: |
         **Success** - A pre-signed download URL for the asset
       headers:
@@ -1975,31 +1922,30 @@ components:
       content:
         application/json:
           schema:
+            $ref: "#/components/schemas/fileDownloadOKResponse"
+    fileDownloadAcceptedResponse:
+      description: |
+        **Accepted** - Asynchronous job id used to call the status endpoint.
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+        retry-after:
+          $ref: "#/components/headers/retryAfter"
+      content:
+        application/json:
+          schema:
             type: object
-            title: FileDownloadUrl
-            description: A pre-signed download URL for the asset
+            title: FileDownloadAcceptedResponse
+            description: Asynchronous job id used to call the status endpoint.
             properties:
-              url:
-                allOf:
-                  - $ref: "#/components/schemas/url"
-                description: The pre-signed URL that supports HTTP range requests for partial downloads
-              urlExpirationDate:
-                allOf:
-                  - $ref: "#/components/schemas/date"
-                description: The expiration date of the pre-signed URL
-              size:
-                type: integer
-                description: Size of the file in bytes
-                format: int64
-                minimum: 0
-              mediaType:
+              jobId:
                 type: string
-                description: The MIME type of the file
-          example:
-            mediaType: application/zip
-            size: 234567890
-            url: https://<storage-url>/download?signature=abc123
-            urlExpirationDate: "2025-05-13T10:15:30Z"
+                description: The asynchronous job id
+                example: 123e4567-e89b-12d3-a456-426614174000
+          examples:
+            downloadAcceptedResponse:
+              value:
+                jobId: 85f7c90a-a252-4e82-8cf3-3c989829cdf9
     preconditionFailedResponse:
       description: |
         **Precondition Failed** - The request failed due to a precondition
@@ -2130,20 +2076,6 @@ components:
             properties:
               name:
                 $ref: "#/components/schemas/assetName"
-    projectRenameRequest:
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            title: ProjectRenameRequest
-            description: Represents a request body for renaming a project.
-            nullable: false
-            required:
-              - name
-            properties:
-              name:
-                $ref: "#/components/schemas/assetName"
     patchAssetPermissions:
       required: true
       content:
@@ -2191,36 +2123,6 @@ components:
               value:
                 path: Marketing/2024/CampaignA
                 parentId: urn:aaid:sc:US:f860f2fc-7942-4e49-ab37-5e2b32afe97a
-    folderRenameRequest:
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            title: FolderRenameRequest
-            description: |
-              Represents a request body for renaming a folder.
-            nullable: false
-            properties:
-              name:
-                $ref: "#/components/schemas/assetName"
-            required:
-              - name
-    fileRenameRequest:
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            title: FileRenameRequest
-            description: |
-              Represents a request body for renaming a file.
-            nullable: false
-            properties:
-              name:
-                $ref: "#/components/schemas/assetName"
-            required:
-              - name
     fileUploadInitRequest:
       required: true
       content:

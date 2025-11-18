@@ -4,7 +4,8 @@ Adobe Admin APIs for Storage Management provide enterprise organizations with pr
 
 With the Adobe Admin APIs for Storage Management, you can:
 
-Configure and manage Content Retention Policies for inactive users to define how inactive users' assets (stored in Adobe storage for business)  are preserved or permanently deleted when accounts are deactivated.
+- Configure and manage content retention policies for inactive users to define how inactive users' assets (stored in Adobe storage for business)  are preserved or permanently deleted when accounts are deactivated.
+- Configure a policy to allow or prevent users in your organization from moving assets into shared projects or folders outside your organization’s storage.
 
 ## Prerequisites
 
@@ -19,7 +20,7 @@ For information about client credential authentication and retrieving Client ID,
 Once you have created your access token, you can follow the steps below to make your first API call.
 
 1. Open your terminal and paste the code below.
-2. Replace the variables `<YOUR_ACCESS_TOKEN>` with the token you generated on the **Adobe Developer Console**.
+2. Replace the variable `<YOUR_ACCESS_TOKEN>` with the token you generated on the **Adobe Developer Console**.
 3. Once all variables have been replaced, run the command.
 
 ```bash

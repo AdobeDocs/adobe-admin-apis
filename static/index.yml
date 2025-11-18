@@ -156,11 +156,9 @@ components:
       enum:
         - file_upload
         - file_download
-        - file_copy
-        - file_move
-        - folder_copy
-        - folder_move
-        - project_package
+        - copy_asset
+        - move_asset
+        - package_asset
     jobStatusEnums:
       type: string
       title: JobStatusEnums
@@ -345,26 +343,6 @@ components:
       minLength: 1
       maxLength: 255
       nullable: false
-    autorename:
-      type: boolean
-      title: Autorename
-      description: |
-        Controls whether to automatically rename assets when name conflicts occur during
-        create, rename, copy, move, or restore operations.
-
-        - **false**: Operation fails with 409 Conflict if a name collision occurs (default)
-        - **true**: System automatically renames the asset by appending a uniqueness token
-          consisting of a non-breaking space(\u00A0) followed by a counter in round parentheses, e.g. "\u00A0(1)"
-      default: false
-      example: true
-    operationOptions:
-      type: object
-      title: OperationOptions
-      description: |
-        Optional configuration for operation behavior. This object allow clients to customize how operations are executed.
-      properties:
-        autorename:
-          $ref: "#/components/schemas/autorename"
     fileAsset:
       type: object
       title: FileAsset
@@ -424,9 +402,6 @@ components:
            as well as the ability to share the asset with other users.
         - `comment` - The subject has comment access to the asset. It includes the ability to view the asset
            and add comments to it.
-        - `undefined` - In some cases, a permission that cannot be expressed by `edit` or `comment` is returned as `undefined`.
-           The user has some underlying permission to the asset, but the access is not specific enough to be classified as `edit` or `comment`.
-           User operations may be limited. 
 
         ---
         > NOTE:  
@@ -435,7 +410,6 @@ components:
       enum:
         - edit
         - comment
-        - undefined
       example: edit
     baseDirectPermissionEntry:
       type: object
@@ -842,12 +816,9 @@ components:
             The type of the asynchronous job, depends on the original API invocation that created the job.  
             Currently, the following job types are supported:
             - file_upload
-            - file_download
-            - file_copy
-            - file_move
-            - folder_copy
-            - folder_move
-            - project_package
+            - copy_asset
+            - move_asset
+            - package_asset
 
             ---
             > NOTE:  
@@ -882,10 +853,10 @@ components:
       required:
         - asset
         - status
-    projectPackageSucceededJobStatus:
+    packageAssetSucceededJobStatus:
       type: object
-      title: ProjectPackageSucceededJobStatus
-      description: Represents the status of a project package succeeded asynchronous job in the system
+      title: PackageAssetSucceededJobStatus
+      description: Represents the status of a package asset succeeded asynchronous job in the system
       allOf:
         - $ref: "#/components/schemas/baseJobStatus"
         - type: object
@@ -923,13 +894,13 @@ components:
         - jobType
       oneOf:
         - $ref: "#/components/schemas/fileUploadSucceededJobStatus"
-        - $ref: "#/components/schemas/projectPackageSucceededJobStatus"
+        - $ref: "#/components/schemas/packageAssetSucceededJobStatus"
         - $ref: "#/components/schemas/fileDownloadSucceededJobStatus"
       discriminator:
         propertyName: jobType
         mapping:
           file_upload: "#/components/schemas/fileUploadSucceededJobStatus"
-          project_package: "#/components/schemas/projectPackageSucceededJobStatus"
+          package_asset: "#/components/schemas/packageAssetSucceededJobStatus"
           file_download: "#/components/schemas/fileDownloadSucceededJobStatus"
     failedJobStatus:
       type: object
@@ -1092,25 +1063,22 @@ components:
         [FIQL-based](https://datatracker.ietf.org/doc/html/draft-nottingham-atompub-fiql-00) filter string  
 
         Following fields are supported for filtering:
-          - `view`: Filters the results to only a specific view (operators allowed are ==). Single value is only supported.
-            The possible values are `yours`, `all`, `shared_with_you`, `discoverable`.
-            Here is how each view works:
-            - `Yours`:
-              - Projects in the calling user's User Home storage
-              - Projects in the calling user's Org's ESM shared storage for which the user has **write access** through
-                membership in the _everybody group.
-            - `Shared with you`:
-              - Projects in other user's User Home storage for which the calling user has permissions
-              - Projects in other Org's ESM shared storage for which the calling user has permissions
-            - `All`:
-              - Combination of Projects returned from `Yours` and `Shared with you`
+          - `view`: Filters the results to only a specific view. The possible values are `yours`, `all`, `shared_with_you`,
+           `discoverable`.
+             Here is how each view works:
+             - `Yours`:
+                - Projects in the calling user's User Home storage
+                - Projects in the calling user's Org's ESM shared storage for which the user has **write access** through
+                 membership in the _everybody group.
+             - `Shared with you`:
+                - Projects in other user's User Home storage for which the calling user has permissions
+                - Projects in other Org's ESM shared storage for which the calling user has permissions
+             - `All`:
+                - Combination of Projects returned from `Yours` and `Shared with you`
             - `Discoverable`:
-              - Projects returned from `All` view
-              - Projects in the calling user's Org's ESM shared storage for which the user has **read access** through
+               - Projects returned from `All` view
+               - Projects in the calling user's Org's ESM shared storage for which the user has **read access** through
                 membership in the _everybody group.
-          - `state`: Filter by project state (operators allowed are ==). Single value is only supported.
-            - `active` (default): Filter by active projects.
-            - `deleted`: Filter by (soft)deleted projects.
 
         ---
         > NOTE:  
@@ -1169,9 +1137,6 @@ components:
         Following fields are supported for filtering:
           - `mediaType`: Filter by media type (operators allowed are ==). Single value is only supported.
           - `assetType`: Filter by asset type (operators allowed are ==). Single value is only supported.
-          - `state`: Filter by asset state (operators allowed are ==). Single value is only supported.
-              - `active` (default): Filter by active assets.
-              - `deleted`: Filter by (soft)deleted assets.
 
         ---
         > NOTE:  
@@ -1624,30 +1589,22 @@ components:
       value:
         error_code: validation_error
         message: The provided usedTransferLinks value is invalid.
-    inactiveUserContentPurgePolicy:
+    singlePolicy:
       value:
         policyType: inactive_user_content_purge
         attributes:
           enabled: true
           retention: P2Y
-    assetOwnershipTransferPolicy:
-      value:
-        policyType: asset_ownership_transfer
-        attributes:
-          enabled: true
-    patchInactiveUserContentPurgePolicy:
+    patchPolicy:
       value:
         - op: replace
           path: /attributes/enabled
-          value: true
+          value: false
+        - op: remove
+          path: /attributes/retention
         - op: add
           path: /attributes/retention
           value: P2Y
-    patchAssetOwnershipTransferPolicy:
-      value:
-        - op: replace
-          path: /attributes/enabled
-          value: true
     invalidAttribute:
       description: |
         **Invalid Attribute** - The server cannot proceed because one or more of the attributes is invalid
@@ -2089,10 +2046,8 @@ components:
           schema:
             $ref: "#/components/schemas/policy"
           examples:
-            inactiveUserContentPurgePolicy:
-              $ref: "#/components/examples/inactiveUserContentPurgePolicy"
-            assetOwnershipTransferPolicy:
-              $ref: "#/components/examples/assetOwnershipTransferPolicy"
+            policyByType:
+              $ref: "#/components/examples/singlePolicy"
     unprocessableEntityPolicyResponse:
       description: |
         **Unprocessable Entity** - The request cannot be processed due to semantic errors
@@ -2121,8 +2076,6 @@ components:
             properties:
               name:
                 $ref: "#/components/schemas/assetName"
-              options:
-                $ref: "#/components/schemas/operationOptions"
     patchAssetPermissions:
       required: true
       content:
@@ -2161,8 +2114,6 @@ components:
                 $ref: "#/components/schemas/assetName"
               path:
                 $ref: "#/components/schemas/path"
-              options:
-                $ref: "#/components/schemas/operationOptions"
           examples:
             Single Folder Create Request:
               value:
@@ -2198,8 +2149,6 @@ components:
                 type: integer
                 description: The size of each block in bytes. The block size returned may differ from the size requested.
                 example: 1048576
-              options:
-                $ref: "#/components/schemas/operationOptions"
             required:
               - size
               - parentId
@@ -2248,7 +2197,5 @@ components:
             items:
               $ref: "#/components/schemas/patchOperation"
           examples:
-            inactiveUserContentPurgePolicy:
-              $ref: "#/components/examples/patchInactiveUserContentPurgePolicy"
-            assetOwnershipTransferPolicy:
-              $ref: "#/components/examples/patchAssetOwnershipTransferPolicy"
+            patchPolicy:
+              $ref: "#/components/examples/patchPolicy"

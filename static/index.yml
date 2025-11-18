@@ -970,9 +970,7 @@ components:
       title: PolicyType
       description: |
         Describes the type of policy.
-      example:
-        - inactive_user_content_purge
-        - asset_ownership_transfer
+      example: inactive_user_content_purge
     policyAttributes:
       type: object
       description: Policy-specific attributes.

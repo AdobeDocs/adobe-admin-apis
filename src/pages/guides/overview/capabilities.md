@@ -31,3 +31,22 @@ The content retention policy governs the assets of inactive (deactivated) users 
 - Lightroom files
 - Behance assets
 - Portfolio assets
+
+## Move Restrictions Policy
+
+The Move Restrictions Policy determines whether users in your organization can move assets into shared projects or folders outside your organization’s storage.
+
+### Key Points
+
+- **Enabled (default):**
+
+  When this policy is enabled, users in your organization can move assets into shared projects or folders outside your organization’s storage.
+
+- **Disabled:**
+
+  When this policy is disabled, users in your organization CANNOT move assets into shared projects or folders outside your organization’s storage.
+
+**Note:**  
+
+- Regardless of the policy’s state, users with Administrator role can move assets into shared projects or folders outside your organization’s storage.
+- Regardless of the policy’s state, users outside your organization CANNOT move assets outside your organization’s storage.

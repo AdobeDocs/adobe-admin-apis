@@ -39,11 +39,18 @@ Here, you can interact with Adobe Admin APIs for Storage Management’s endpoint
 
 ## Step 5: Managing content with Adobe Admin APIs for Storage Management
 
+You can manage the following types of policies: 
+
+- [Content Retention policy](#content-retention-policy)
+- [Move Restrictions policy](#move-restrictions-policy)
+
+### Content retention policy
+
 The _Content Retention Policy for Inactive User_ defines rules such as retention periods and content deletion criteria for inactive users, automatically triggering the permanent deletion of user assets once the defined retention period expires.
 
 To use this policy for your organization, you can configure, retrieve, and update it using the APIs described below.
 
-### Policy object
+#### Policy object
 
 The following policy objects are available:
 
@@ -52,11 +59,11 @@ The following policy objects are available:
   - `enabled` (boolean): Whether the policy is active.  
   - `retention` (string, optional): Retention period in ISO 8601 format.
 
-### Enabling policy
+#### Enabling policy
 
 Use a `PATCH` request to enable the policy. The default retention period is 2 years, which can be customised to any duration between 30 days and 10 years (specified in months or years) using the ISO 8601 duration format.
 
-#### Request
+##### Request
 
 ```bash
 curl -X PATCH \
@@ -77,7 +84,7 @@ curl -X PATCH \
 Replace `YOUR_ACCESS_TOKEN` with a valid OAuth access token.  
 The `If-Match` header includes the ETag(s) for optimistic concurrency control.
 
-#### Response
+##### Response
 
 Sample response:
 
@@ -97,11 +104,11 @@ Sample response:
 - `attributes.enabled`: Whether the policy is enabled (`true`) or disabled (`false`)
 - `attributes.retention`: Retention period using ISO 8601 duration format (`P2Y` means 2 years)
 
-### Get policy details
+#### Get policy details
 
 Use the `GET Policy details` API to retrieve the details of a specific policy for your organization.
 
-#### Request
+##### Request
 
 ```bash
 curl -X GET \ 
@@ -113,7 +120,7 @@ curl -X GET \
 
 Replace `YOUR_ACCESS_TOKEN_HERE` with a valid OAuth access v3 token.
 
-#### Response
+##### Response
 
 Sample response:
 
@@ -133,11 +140,11 @@ Response parameters:
 - `attributes.enabled`: Whether the policy is enabled (true) or disabled (false)
 - `attributes.retention`: Retention period using ISO 8601 duration format (P2Y means 2 years)
 
-### Disabling policy
+#### Disabling policy
 
 Use a PATCH request to disable the policy.
 
-#### Request
+##### Request
 
 ```bash
 curl -X PATCH \
@@ -158,7 +165,7 @@ curl -X PATCH \
 Replace `YOUR_ACCESS_TOKEN` with a valid OAuth access token.  
 The `If-Match` header includes the ETag(s) for optimistic concurrency control.
 
-#### Response
+##### Response
 
 Sample response:
 
@@ -172,11 +179,11 @@ Sample response:
 }
 ```
 
-### Updating retention period
+#### Updating retention period
 
 Use a PATCH request to modify retention of an existing policy.
 
-#### Request
+##### Request
 
 ```bash
 curl -X PATCH \
@@ -198,7 +205,7 @@ curl -X PATCH \
 Replace `YOUR_ACCESS_TOKEN` with a valid OAuth access token.  
 The `If-Match` header includes the ETag(s) for optimistic concurrency control.
 
-#### Response
+##### Response
 
 Sample response:
 
@@ -211,3 +218,111 @@ Sample response:
   }
 }
 ```
+
+### Move Restrictions policy
+
+The Move Restrictions Policy determines whether users in your organization can move assets into shared projects or folders outside your organization’s storage.
+
+To use this policy for your organization, you can retrieve, enable and disable it using the APIs described below.
+
+#### Policy object
+
+The following policy objects are available:
+
+- `policyType`: A string representing the type of policy (Example: asset_ownership_transfer) 
+- `attributes`: An object containing policy-specific settings, including:
+  - `enabled` (boolean): Whether the policy is active.
+
+#### Get policy details
+
+Use the `GET Policy details` API to retrieve the current configuration for your organization. 
+
+##### Request
+
+```bash
+curl --location 'https://cloudstorage-stage.adobe.io/v1/policies/org/asset_ownership_transfer' \
+--header 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
+--header 'x-request-id: 1234567890' \
+```
+
+##### Response
+
+```json
+{
+  "policyType": "asset_ownership_transfer",
+  "attributes": {
+    "enabled": true
+  }
+}
+```
+
+#### Disable policy
+
+Use a PATCH request to disable the policy.
+
+##### Request
+
+```bash
+curl --location --request PATCH 'https://cloudstorage-stage.adobe.io/v1/policies/org/asset_ownership_transfer' \
+--header 'Content-Type: application/json-patch+json' \
+--header 'If-Match: "your-current-etag-value"' \
+--header 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
+--header 'x-request-id: 1234567890' \
+--data '[
+  {
+    "op": "replace",
+    "path": "/attributes/enabled",
+    "value": false
+  }
+]'
+```
+
+##### Response
+
+```json
+{
+  "policyType": "asset_ownership_transfer",
+  "attributes": {
+    "enabled": false
+  }
+}
+```
+
+#### Enable policy
+
+Use a PATCH request to enable the policy.
+
+##### Request
+
+```bash
+curl --location --request PATCH 'https://cloudstorage-stage.adobe.io/v1/policies/org/asset_ownership_transfer' \
+--header 'Content-Type: application/json-patch+json' \
+--header 'If-Match: "your-current-etag-value"' \
+--header 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
+--header 'x-request-id: 1234567890' \
+--data '[
+  {
+    "op": "replace",
+    "path": "/attributes/enabled",
+    "value": true
+  }
+]'
+```
+
+##### Response
+
+```json
+{
+  "policyType": "asset_ownership_transfer",
+  "attributes": {
+    "enabled": true
+  }
+}
+```
+
+#### Response parameters
+
+| Parameter          | Description                                     |
+|--------------------|------------------------------------------------|
+| `policyType`         | The type of the policy                          |
+| `attributes.enabled` | Whether the policy is enabled (true) or disabled (false) |

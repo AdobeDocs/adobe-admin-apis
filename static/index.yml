@@ -1,0 +1,2201 @@
+openapi: 3.0.3
+info:
+  title: Adobe Admin APIs - Storage Management
+  description: |
+    # Overview
+
+    The Policies APIs within the Adobe Admin APIs for Storage Management framework provide a structured and secure way to define, retrieve, and manage retention policies across Adobe enterprise environments. These APIs are essential for administrators seeking fine-grained control over how assets are managed.
+    
+  version: v1
+servers:
+  - url: https://cloudstorage.adobe.io/v1
+    description: Production Server
+    x-audience: prod
+security:
+  - Authorization: []
+tags:
+  - name: Policies
+    description: |
+      Represents a set of rules that governs how assets are managed within the system.
+paths:
+  /policies/org/{policyType}:
+    get:
+      operationId: getPolicy
+      summary: Get a policy by policyType
+      description: |
+        This endpoint retrieves a specific policy identified by its policyType, provided the user has the necessary permissions.
+      tags:
+        - Policies
+      parameters:
+        - $ref: "#/components/parameters/policyType"
+        - $ref: "#/components/parameters/requestId"
+      responses:
+        "200":
+          $ref: "#/components/responses/policyResponse"
+        "400":
+          $ref: "#/components/responses/invalidRequestResponse"
+        "401":
+          $ref: "#/components/responses/unauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/accessErrorResponse"
+        "406":
+          $ref: "#/components/responses/notAcceptableResponse"
+        "429":
+          $ref: "#/components/responses/rateLimitResponse"
+        "500":
+          $ref: "#/components/responses/runtimeErrorResponse"
+    patch:
+      operationId: patchPolicy
+      summary: Update a policy by policyType
+      description: |
+        This endpoint updates a specific policy identified by its policyType, provided the user has the necessary permissions.
+      tags:
+        - Policies
+      parameters:
+        - $ref: "#/components/parameters/policyType"
+        - $ref: "#/components/parameters/ifMatch"
+        - $ref: "#/components/parameters/requestId"
+      requestBody:
+        $ref: "#/components/requestBodies/policyPatchRequest"
+      responses:
+        "200":
+          $ref: "#/components/responses/policyResponse"
+        "400":
+          $ref: "#/components/responses/invalidRequestResponse"
+        "401":
+          $ref: "#/components/responses/unauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/accessErrorResponse"
+        "406":
+          $ref: "#/components/responses/notAcceptableResponse"
+        "412":
+          $ref: "#/components/responses/preconditionFailedResponse"
+        "422":
+          $ref: "#/components/responses/unprocessableEntityPolicyResponse"
+        "429":
+          $ref: "#/components/responses/rateLimitResponse"
+        "500":
+          $ref: "#/components/responses/runtimeErrorResponse"
+components:
+  securitySchemes:
+    Authorization:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: IMS User Token or Service 2 Service (Technical Account). Required for all API endpoints. Must be a valid JWT token.
+  schemas:
+    errorCodeEnums:
+      type: string
+      title: ErrorCodeEnums
+      description: |
+        It describes the type of error through a human readable code.  
+
+        ---
+        > NOTE:  
+        > This list is not exhaustive and will be updated as new error codes are added. Clients should expect new error codes to be added in the future.
+        ---
+      enum:
+        - bad_request
+        - unauthorized
+        - access_error
+        - resource_not_found
+        - not_acceptable
+        - invalid_operation
+        - cursor_expired
+        - precondition_failed
+        - etag_mismatch
+        - payload_too_large
+        - invalid_content_type
+        - validation_error
+        - resource_too_large
+        - rate_limited
+        - runtime_error
+        - not_implemented
+        - operation_timeout
+        - storage_quota_exceeded
+    assetTypeEnums:
+      type: string
+      title: AssetType
+      description: |
+        Describes the type of asset.  
+
+        ---
+        > NOTE:  
+        > This list is not exhaustive and will be updated as new asset types are added. Clients should expect new asset types to be added in the future.
+        ---
+      enum:
+        - folder
+        - file
+        - project
+        - library
+        - cloudDoc
+    patchPermissionResultEnums:
+      type: string
+      title: PatchPermissionResultEnums
+      description: |
+        Describes the result of the permission patch for each principal.  
+
+        ---
+        > NOTE:  
+        > This list is not exhaustive and will be updated as new permission patch results are added. Clients should expect new permission patch results to be added in the future.
+        ---
+      enum:
+        - successful
+        - failed
+        - pending
+    jobTypeEnums:
+      type: string
+      title: JobTypeEnums
+      description: |
+        It describes the type of asynchronous job, depends on the original API invocation that created the job.  
+
+        ---
+        > NOTE:  
+        > This list is not exhaustive and will be updated as new job types are added. Clients should expect new job types to be added in the future.
+        ---
+      enum:
+        - file_upload
+        - file_download
+        - copy_asset
+        - move_asset
+        - package_asset
+    jobStatusEnums:
+      type: string
+      title: JobStatusEnums
+      description: |
+        It describes the status of an asynchronous job.  
+
+        ---
+        > NOTE:  
+        > This list is not exhaustive and will be updated as new job types are added. Clients should expect new job types to be added in the future.
+        ---
+      enum:
+        - running
+        - succeeded
+        - failed
+        - partially_succeeded
+    asset:
+      description: |
+        Represents a generic asset in the system.
+      required:
+        - assetType
+      oneOf:
+        - $ref: "#/components/schemas/fileAsset"
+        - $ref: "#/components/schemas/folderAsset"
+        - $ref: "#/components/schemas/projectAsset"
+      discriminator:
+        propertyName: assetType
+        mapping:
+          file: "#/components/schemas/fileAsset"
+          folder: "#/components/schemas/folderAsset"
+          project: "#/components/schemas/projectAsset"
+    pagination:
+      type: object
+      title: Pagination
+      description: Pagination information for collection responses
+      properties:
+        nextUrl:
+          type: string
+          description: URI to the next page of results
+          format: uri
+        limit:
+          type: integer
+          description: Maximum number of items per page
+          format: int32
+      required:
+        - limit
+      example:
+        limit: 10
+        nextUrl: https://api.example.com/assets?cursor=550e8400-e29b-41d4-a716-446655440000&limit=10
+    assetId:
+      type: string
+      title: Asset Id
+      minLength: 1
+      description: A globally unique identifier for the asset
+      example: urn:aaid:sc:US:4f2fc15c-c062-4951-b37b-1f65ed62a174
+    date:
+      type: string
+      format: date-time
+      example: "2021-01-01T00:00:00Z"
+    principalId:
+      type: string
+      description: The Unique ID for the principal in the system
+      example: 08D81E3B665BE5640A495C2C@AdobeOrg
+    path:
+      title: Path
+      description: The path of the asset from the parent collection.
+      type: string
+      example: /My Project/My Folder/My Asset
+    ancestors:
+      type: array
+      description: |
+        Ordered list of ancestor asset IDs (first is immediate parent).
+      items:
+        $ref: "#/components/schemas/assetId"
+      example:
+        - urn:aaid:sc:US:4f2fc15c-c062-4951-b37b-1f65ed62a174
+        - urn:aaid:sc:US:4f2fc15c-c062-4951-b37b-1f65ed62a175
+        - urn:aaid:sc:US:4f2fc15c-c062-4951-b37b-1f65ed62a176
+    baseAsset:
+      type: object
+      title: BaseAsset
+      description: |
+        Contains the common properties for all assets in the system.  
+
+        ---
+        > NOTE:  
+        > It is not intended to be used directly
+        ---
+      required:
+        - name
+        - assetId
+      properties:
+        assetId:
+          allOf:
+            - $ref: "#/components/schemas/assetId"
+          readOnly: true
+        name:
+          type: string
+          description: Human-readable name of the asset
+          example: My Asset
+        createdDate:
+          allOf:
+            - $ref: "#/components/schemas/date"
+          description: Timestamp when the asset was created
+          readOnly: true
+        modifiedDate:
+          allOf:
+            - $ref: "#/components/schemas/date"
+          description: Timestamp of the most recent update
+          readOnly: true
+        createdBy:
+          allOf:
+            - $ref: "#/components/schemas/principalId"
+          description: IMS user ID of the principal who created the asset
+          readOnly: true
+          example: 08D81E3B665BE5640A495C2C@AdobeOrg
+        modifiedBy:
+          allOf:
+            - $ref: "#/components/schemas/principalId"
+          description: IMS user ID of the principal who last modified the asset
+          readOnly: true
+          example: 08D81E3B665BE5640A495C2C@AdobeOrg
+        path:
+          allOf:
+            - $ref: "#/components/schemas/path"
+          readOnly: true
+        ancestors:
+          allOf:
+            - $ref: "#/components/schemas/ancestors"
+          readOnly: true
+        state:
+          type: string
+          description: Current state of the asset
+          enum:
+            - active
+            - deleted
+            - deleted_parent
+          default: active
+    projectAsset:
+      type: object
+      title: ProjectAsset
+      description: Represents a project in the system
+      allOf:
+        - $ref: "#/components/schemas/baseAsset"
+        - type: object
+          properties:
+            assetType:
+              type: string
+              default: project
+          required:
+            - assetType
+    paginatedProjects:
+      title: PaginatedProjects
+      description: Represents a paginated list of projects
+      type: object
+      properties:
+        paging:
+          $ref: "#/components/schemas/pagination"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/projectAsset"
+    errorResponse:
+      type: object
+      title: ErrorResponse
+      description: |
+        Describes an error that occurred while processing a request.
+      required:
+        - error_code
+        - message
+      properties:
+        error_code:
+          $ref: "#/components/schemas/errorCodeEnums"
+          readOnly: true
+        message:
+          type: string
+          description: A human-readable explanation specific to this occurrence of the problem.
+          readOnly: true
+      additionalProperties: true
+    assetName:
+      type: string
+      description: The name of the asset (including the extension, in case of a file)
+      minLength: 1
+      maxLength: 255
+      nullable: false
+    fileAsset:
+      type: object
+      title: FileAsset
+      description: Represents a file in the system
+      allOf:
+        - $ref: "#/components/schemas/baseAsset"
+        - type: object
+          properties:
+            assetType:
+              type: string
+              default: file
+            mediaType:
+              type: string
+              description: The MIME type of the file
+              example: image/jpeg
+            size:
+              type: integer
+              description: Size of the file in bytes
+              format: int64
+              minimum: 0
+              example: 1048576
+          required:
+            - assetType
+            - mediaType
+            - size
+    folderAsset:
+      type: object
+      title: FolderAsset
+      description: Represents a folder in the system
+      allOf:
+        - $ref: "#/components/schemas/baseAsset"
+        - type: object
+          properties:
+            assetType:
+              type: string
+              default: folder
+          required:
+            - assetType
+    paginatedAssets:
+      title: PaginatedAssets
+      description: Represents a paginated list of assets
+      type: object
+      properties:
+        paging:
+          $ref: "#/components/schemas/pagination"
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/asset"
+    roleEnums:
+      type: string
+      title: RoleEnums
+      description: |
+        It describes the level of access granted for an asset to a subject.  
+        Following roles are supported:
+        - `edit` - The subject has edit access to the asset. It includes all permissions of the `comment` role
+           as well as the ability to share the asset with other users.
+        - `comment` - The subject has comment access to the asset. It includes the ability to view the asset
+           and add comments to it.
+
+        ---
+        > NOTE:  
+        > This list is not exhaustive and will be updated as roles are added. Clients should expect new roles to be added in the future.
+        ---
+      enum:
+        - edit
+        - comment
+      example: edit
+    baseDirectPermissionEntry:
+      type: object
+      title: BaseDirectPermissionEntry
+      properties:
+        id:
+          $ref: "#/components/schemas/principalId"
+        name:
+          type: string
+          title: Name
+          description: Display name of the principal.
+        role:
+          $ref: "#/components/schemas/roleEnums"
+      required:
+        - id
+        - name
+        - role
+    userDirectPermissionEntry:
+      type: object
+      title: UserDirectPermissionEntry
+      allOf:
+        - $ref: "#/components/schemas/baseDirectPermissionEntry"
+        - type: object
+          properties:
+            type:
+              type: string
+              default: user
+            email:
+              type: string
+              format: email
+              description: Email of the user.
+          required:
+            - type
+            - email
+    groupDirectPermissionEntry:
+      type: object
+      title: GroupDirectPermissionEntry
+      allOf:
+        - $ref: "#/components/schemas/baseDirectPermissionEntry"
+        - type: object
+          properties:
+            type:
+              type: string
+              default: group
+            organizationName:
+              type: string
+              description: Name of the organization.
+          required:
+            - type
+            - organizationName
+    predefinedGroupsDirectPermissionEntry:
+      type: object
+      title: PredefinedGroupsDirectPermissionEntry
+      allOf:
+        - $ref: "#/components/schemas/baseDirectPermissionEntry"
+        - type: object
+          properties:
+            type:
+              type: string
+              default: predefined
+            organizationName:
+              type: string
+              description: Name of the organization.
+          required:
+            - type
+            - organizationName
+    directPermissionEntry:
+      type: object
+      title: DirectPermissionEntry
+      description: Represents a principal (user, group, or predefined groups) with associated role.
+      oneOf:
+        - $ref: "#/components/schemas/userDirectPermissionEntry"
+        - $ref: "#/components/schemas/groupDirectPermissionEntry"
+        - $ref: "#/components/schemas/predefinedGroupsDirectPermissionEntry"
+      discriminator:
+        propertyName: type
+        mapping:
+          user: "#/components/schemas/userDirectPermissionEntry"
+          group: "#/components/schemas/groupDirectPermissionEntry"
+          predefined: "#/components/schemas/predefinedGroupsDirectPermissionEntry"
+    pendingPermissionEntry:
+      type: object
+      title: PendingPermissionEntry
+      description: Represents a pending permission entry for a user along with the role and the timestamp of the invitation.
+      properties:
+        email:
+          type: string
+          format: email
+          title: Invited Email
+          description: Email address of the invited user.
+        role:
+          $ref: "#/components/schemas/roleEnums"
+        created:
+          allOf:
+            - $ref: "#/components/schemas/date"
+          description: Timestamp when the invitation was created.
+        id:
+          type: string
+          title: Invitation ID
+          description: Unique identifier for the invitation (typically mailto:<email>).
+      required:
+        - email
+        - role
+        - created
+        - id
+    assetPermissionsResponse:
+      type: object
+      title: AssetPermissionsResponse
+      properties:
+        direct:
+          type: array
+          title: Direct Permissions
+          items:
+            $ref: "#/components/schemas/directPermissionEntry"
+          default: []
+        pending:
+          type: array
+          title: Pending Invitations
+          items:
+            $ref: "#/components/schemas/pendingPermissionEntry"
+          default: []
+    principalTypeEnums:
+      description: |
+        Represents all the types of principals
+        ---
+          > Note:
+            The list is not exhaustive and will be updated as new types of principals are added.
+        ---
+      type: string
+      enum:
+        - user
+        - group
+        - predefined
+    patchAssetPermissionsRequest:
+      type: object
+      title: PatchAssetPermissionsRequest
+      description: Represents the request body for a patch operation on permissions for an asset
+      properties:
+        direct:
+          type: object
+          title: DirectPermissionsModification
+          properties:
+            additions:
+              type: array
+              title: AdditionsList
+              description: Represents a list of users or groups that are being granted permission for an asset
+              items:
+                description: Represents a user or group that is being granted permission for an asset
+                type: object
+                title: NewPermissionEntry
+                properties:
+                  recipient:
+                    type: string
+                    description: |
+                      Provides identifier for the recipient. It can be one of the following formats:
+                      | Type of Recipient | Format | Description | Example |
+                      | ----------------- | ------ | ----------- | ------- |
+                      | User              | mailto:<email of the user | Email address of the recipient | mailto:john.doe@example.com |
+                      | Group             | name:<group name> | Group name defined in the organization | name:Example Group |
+                      | Predefined        | name:<predefined principal name> | Predefined principal name | name:_everybody |
+
+                      **Note for Predefined Principals:**
+                      - `_everybody`: Limited to `comment` (grants access to all org users)
+                      - `authenticated`: Can have `comment` or `edit` roles (requires authentication)
+                      - `all`: Read-only principal, cannot be added to new permissions
+                  type:
+                    $ref: "#/components/schemas/principalTypeEnums"
+                  role:
+                    $ref: "#/components/schemas/roleEnums"
+                required:
+                  - recipient
+                  - type
+                  - role
+              maxItems: 10
+              default: []
+            updates:
+              type: array
+              title: UpdatesList
+              description: Represents a list of users or groups with a new role
+              items:
+                description: Represents a user or group with a new role
+                type: object
+                title: UpdatedPermissionEntry
+                properties:
+                  id:
+                    $ref: "#/components/schemas/principalId"
+                  type:
+                    $ref: "#/components/schemas/principalTypeEnums"
+                  role:
+                    $ref: "#/components/schemas/roleEnums"
+                required:
+                  - id
+                  - type
+                  - role
+              maxItems: 10
+              default: []
+            deletions:
+              type: array
+              title: DeletionsList
+              description: Represents a list of users or groups that are being removed from the asset
+              items:
+                description: Represents a user or group that is being removed from the asset
+                type: object
+                title: DeletionPermissionEntry
+                properties:
+                  id:
+                    $ref: "#/components/schemas/principalId"
+                  type:
+                    $ref: "#/components/schemas/principalTypeEnums"
+              maxItems: 10
+              default: []
+      required:
+        - direct
+    basePatchPermissionEntry:
+      type: object
+      title: BasePatchPermissionEntry
+      description: Represents a base permission entry
+      properties:
+        id:
+          $ref: "#/components/schemas/principalId"
+        type:
+          $ref: "#/components/schemas/principalTypeEnums"
+      required:
+        - id
+        - type
+    successfulPatchPermissionEntry:
+      description: Represents a successful permission entry
+      title: SuccessfulPatchPermissionEntry
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/basePatchPermissionEntry"
+        - type: object
+          properties:
+            status:
+              type: string
+              default: successful
+            role:
+              $ref: "#/components/schemas/roleEnums"
+      required:
+        - status
+    failedPatchPermissionEntry:
+      description: Represents a failed permission entry
+      title: FailedPatchPermissionEntry
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/basePatchPermissionEntry"
+        - type: object
+          properties:
+            status:
+              type: string
+              default: failed
+            error_code:
+              type: string
+            message:
+              type: string
+            role:
+              $ref: "#/components/schemas/roleEnums"
+      additionalProperties: true
+      required:
+        - status
+        - error_code
+        - message
+    pendingPatchPermissionEntry:
+      description: Represents a pending permission entry
+      title: PendingPatchPermissionEntry
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/basePatchPermissionEntry"
+        - type: object
+          properties:
+            status:
+              type: string
+              default: pending
+            created:
+              $ref: "#/components/schemas/date"
+            email:
+              type: string
+              format: email
+              description: Email of the user.
+            role:
+              $ref: "#/components/schemas/roleEnums"
+      required:
+        - status
+        - email
+        - role
+        - created
+    patchPermissionResultEntry:
+      description: |
+        Represents a permission patch result entry.
+      title: PatchPermissionResultEntry
+      required:
+        - status
+      oneOf:
+        - $ref: "#/components/schemas/successfulPatchPermissionEntry"
+        - $ref: "#/components/schemas/failedPatchPermissionEntry"
+        - $ref: "#/components/schemas/pendingPatchPermissionEntry"
+      discriminator:
+        propertyName: status
+        mapping:
+          successful: "#/components/schemas/successfulPatchPermissionEntry"
+          failed: "#/components/schemas/failedPatchPermissionEntry"
+          pending: "#/components/schemas/pendingPatchPermissionEntry"
+    patchAssetPermissionsResponse:
+      type: object
+      title: PatchAssetPermissionsResponse
+      properties:
+        direct:
+          title: PatchAssetDirectPermissionsResult
+          type: object
+          properties:
+            additions:
+              type: array
+              title: AdditionsList
+              description: Status of each permission addition.
+              items:
+                $ref: "#/components/schemas/patchPermissionResultEntry"
+              default: []
+            updates:
+              type: array
+              title: UpdatesList
+              description: Status of each permission update.
+              items:
+                $ref: "#/components/schemas/patchPermissionResultEntry"
+              default: []
+            deletions:
+              type: array
+              title: DeletionsList
+              description: Status of each permission deletion.
+              items:
+                $ref: "#/components/schemas/patchPermissionResultEntry"
+              default: []
+      required:
+        - direct
+    url:
+      type: string
+      title: URL
+      description: A URL for the asset
+      format: uri
+    fileDownloadOKResponse:
+      title: FileDownloadOKResponse
+      description: A pre-signed download URL for the asset
+      properties:
+        url:
+          allOf:
+            - $ref: "#/components/schemas/url"
+          description: The pre-signed URL that supports HTTP range requests for partial downloads
+        urlExpirationDate:
+          allOf:
+            - $ref: "#/components/schemas/date"
+          description: The expiration date of the pre-signed URL
+        size:
+          type: integer
+          description: Size of the file in bytes
+          format: int64
+          minimum: 0
+        mediaType:
+          type: string
+          description: The MIME type of the file
+      example:
+        mediaType: application/zip
+        size: 234567890
+        url: https://<storage-url>/download?signature=abc123
+        urlExpirationDate: "2025-05-13T10:15:30Z"
+    fileSize:
+      type: integer
+      title: FileSize
+      description: The size of the file in bytes.
+      minimum: 1
+      format: int64
+      example: 1048576
+    jobId:
+      type: string
+      title: JobId
+      description: A globally unique identifier for the asynchronous job
+    requestId:
+      type: string
+      title: RequestId
+      description: An identifier provided by the client to identify the request.
+      example: "1234567890"
+      minLength: 1
+      maxLength: 128
+    baseJobStatus:
+      type: object
+      title: BaseJobStatus
+      description: |
+        Contains the common properties for all asynchronous jobs in the system.  
+
+        ---
+          > NOTE:  
+          > It is not intended to be used directly
+        ---
+      required:
+        - jobId
+        - requestId
+        - jobType
+      properties:
+        jobId:
+          $ref: "#/components/schemas/jobId"
+        requestId:
+          $ref: "#/components/schemas/requestId"
+        jobType:
+          type: string
+          description: |
+            The type of the asynchronous job, depends on the original API invocation that created the job.  
+            Currently, the following job types are supported:
+            - file_upload
+            - copy_asset
+            - move_asset
+            - package_asset
+
+            ---
+            > NOTE:  
+            > This list is not exhaustive and will be updated as new job types are added. Clients should expect new job types to be added in the future.
+            ---
+    runningJobStatus:
+      type: object
+      title: RunningJobStatus
+      description: Represents the status of a running asynchronous job in the system
+      allOf:
+        - $ref: "#/components/schemas/baseJobStatus"
+        - type: object
+          properties:
+            status:
+              type: string
+              default: running
+      required:
+        - status
+    fileUploadSucceededJobStatus:
+      type: object
+      title: FileUploadSucceededJobStatus
+      description: Represents the status of a file upload succeeded asynchronous job in the system
+      allOf:
+        - $ref: "#/components/schemas/baseJobStatus"
+        - type: object
+          properties:
+            status:
+              type: string
+              default: succeeded
+            asset:
+              $ref: "#/components/schemas/asset"
+      required:
+        - asset
+        - status
+    packageAssetSucceededJobStatus:
+      type: object
+      title: PackageAssetSucceededJobStatus
+      description: Represents the status of a package asset succeeded asynchronous job in the system
+      allOf:
+        - $ref: "#/components/schemas/baseJobStatus"
+        - type: object
+          properties:
+            status:
+              type: string
+              default: succeeded
+            assets:
+              type: array
+              items:
+                $ref: "#/components/schemas/asset"
+      required:
+        - assets
+        - status
+    fileDownloadSucceededJobStatus:
+      type: object
+      title: FileDownloadSucceededJobStatus
+      description: Represents the status of a file download succeeded asynchronous job in the system
+      allOf:
+        - $ref: "#/components/schemas/baseJobStatus"
+        - type: object
+          properties:
+            status:
+              type: string
+              default: succeeded
+            downloadResponse:
+              $ref: "#/components/schemas/fileDownloadOKResponse"
+      required:
+        - downloadResponse
+        - status
+    succeededJobStatus:
+      description: |
+        Represents the status of a succeeded asynchronous job in the system
+      required:
+        - jobType
+      oneOf:
+        - $ref: "#/components/schemas/fileUploadSucceededJobStatus"
+        - $ref: "#/components/schemas/packageAssetSucceededJobStatus"
+        - $ref: "#/components/schemas/fileDownloadSucceededJobStatus"
+      discriminator:
+        propertyName: jobType
+        mapping:
+          file_upload: "#/components/schemas/fileUploadSucceededJobStatus"
+          package_asset: "#/components/schemas/packageAssetSucceededJobStatus"
+          file_download: "#/components/schemas/fileDownloadSucceededJobStatus"
+    failedJobStatus:
+      type: object
+      title: FailedJobStatus
+      description: Represents the status of a failed asynchronous job in the system
+      allOf:
+        - $ref: "#/components/schemas/baseJobStatus"
+        - type: object
+          properties:
+            status:
+              type: string
+              default: failed
+            errors:
+              type: array
+              description: The errors that occurred during the job
+              items:
+                $ref: "#/components/schemas/errorResponse"
+      required:
+        - status
+        - errors
+    jobStatus:
+      title: JobStatus
+      description: Represents the status of a job in the system.
+      required:
+        - status
+      oneOf:
+        - $ref: "#/components/schemas/runningJobStatus"
+        - $ref: "#/components/schemas/succeededJobStatus"
+        - $ref: "#/components/schemas/failedJobStatus"
+      discriminator:
+        propertyName: status
+        mapping:
+          running: "#/components/schemas/runningJobStatus"
+          succeeded: "#/components/schemas/succeededJobStatus"
+          failed: "#/components/schemas/failedJobStatus"
+    policyType:
+      type: string
+      title: PolicyType
+      description: |
+        Describes the type of policy.
+      example: inactive_user_content_purge
+    policyAttributes:
+      type: object
+      description: Policy-specific attributes.
+      required:
+        - enabled
+      properties:
+        enabled:
+          type: boolean
+          description: Describes whether the policy is enabled or disabled.
+          example: true
+        retention:
+          type: string
+          description: |
+            Retention period in ISO 8601 duration format (e.g., P2Y for 2 years, P1M for 1 month).
+            This field may be optional depending on the policy type.
+          example: P2Y
+          nullable: true
+    policy:
+      type: object
+      title: Policy
+      description: Represents a policy in the system.
+      required:
+        - policyType
+        - attributes
+      properties:
+        policyType:
+          $ref: "#/components/schemas/policyType"
+        attributes:
+          $ref: "#/components/schemas/policyAttributes"
+    patchOperation:
+      type: object
+      title: PatchOperation
+      description: Represents a JSON patch operation
+      required:
+        - op
+        - path
+      properties:
+        op:
+          type: string
+          description: The operation to perform
+          enum:
+            - add
+            - remove
+            - replace
+            - move
+            - copy
+            - test
+        path:
+          type: string
+          description: |
+            A JSON Pointer path specifying the location in the policy to apply the operation.
+          pattern: ^(/[^/~]*|/[^/~]*(/[^/~]*)*|)$
+          example: /attributes/enabled
+        value:
+          description: |
+            The value to apply at the specified path.
+            Only used for the `add` and `replace` operations.
+            schema: {}
+        from:
+          description: |
+            A JSON Pointer path specifying the location in the policy to copy from.
+            Only used for the `move` and `copy` operations.
+          type: string
+  parameters:
+    limit:
+      name: limit
+      in: query
+      required: false
+      description: |
+        * Provides a hint for the number of items per page.
+        * In cases where multiple elements have the same field value used to split the page, the server may adjust the number of items returned to ensure page boundaries align correctly.
+      schema:
+        type: integer
+        minimum: 1
+        default: 20
+        maximum: 100
+    cursor:
+      name: cursor
+      in: query
+      required: false
+      description: |
+        Cursor used for fetching next set of results.
+        * If not provided, the first page of results is returned.
+        * For subsequent pages, only the cursor should be sent.
+
+        ---
+        > NOTE:  
+        > The cursor is opaque and should not be parsed or modified by clients.
+        ---
+      schema:
+        type: string
+      allowReserved: true
+      example: 123e4567e89b12d3a456426614174000
+    projectsSortBy:
+      name: sortBy
+      in: query
+      required: false
+      description: |
+        Defines the sort order.  
+        *  If not specified, the **default is `+name`**.
+        *  Prefix with `-` for descending order. `+` is optional for ascending order.
+
+        Following fields are supported for sorting:
+          - name
+          - created
+
+        ---
+        > NOTE:  
+        > * Only applicable for the first page. Subsequent pages must use the cursor.
+        ---
+      schema:
+        type: string
+      example: created
+    projectsFilter:
+      name: filter
+      in: query
+      required: false
+      description: |
+        [FIQL-based](https://datatracker.ietf.org/doc/html/draft-nottingham-atompub-fiql-00) filter string  
+
+        Following fields are supported for filtering:
+          - `view`: Filters the results to only a specific view. The possible values are `yours`, `all`, `shared_with_you`,
+           `discoverable`.
+             Here is how each view works:
+             - `Yours`:
+                - Projects in the calling user's User Home storage
+                - Projects in the calling user's Org's ESM shared storage for which the user has **write access** through
+                 membership in the _everybody group.
+             - `Shared with you`:
+                - Projects in other user's User Home storage for which the calling user has permissions
+                - Projects in other Org's ESM shared storage for which the calling user has permissions
+             - `All`:
+                - Combination of Projects returned from `Yours` and `Shared with you`
+            - `Discoverable`:
+               - Projects returned from `All` view
+               - Projects in the calling user's Org's ESM shared storage for which the user has **read access** through
+                membership in the _everybody group.
+
+        ---
+        > NOTE:  
+        > * Only applicable for the first page. Subsequent pages must use the cursor.
+        ---
+      schema:
+        type: string
+      example: view==discoverable
+    requestId:
+      name: x-request-id
+      in: header
+      schema:
+        type: string
+        example: 1234567890
+        minLength: 1
+        maxLength: 128
+      description: |
+        The `X-Request-Id` header is used to identify a request.  
+        It can be used to correlate logs and other resources and is intended to be a non-persistent identifier.
+    assetId:
+      name: assetId
+      in: path
+      required: true
+      description: |
+        The ID of the asset to get.
+      schema:
+        $ref: "#/components/schemas/assetId"
+    assetsSortBy:
+      name: sortBy
+      in: query
+      required: false
+      description: |
+        Defines the sort order.  
+        *  If not specified, the **default is `+name`**.
+        *  Prefix with `-` for descending order. `+` is optional for ascending order.
+          
+          Following fields are supported for sorting:
+          - name
+          - created
+          - modified  
+
+        ---
+        > NOTE: 
+        > * Only applicable for the first page. Subsequent pages must use the cursor.
+        ---
+      schema:
+        type: string
+      example: "-modified,+name"
+    assetsFilter:
+      name: filter
+      in: query
+      required: false
+      description: |
+        [FIQL-based](https://datatracker.ietf.org/doc/html/draft-nottingham-atompub-fiql-00) filter string
+
+        Following fields are supported for filtering:
+          - `mediaType`: Filter by media type (operators allowed are ==). Single value is only supported.
+          - `assetType`: Filter by asset type (operators allowed are ==). Single value is only supported.
+
+        ---
+        > NOTE:  
+        > * Only applicable for the first page. Subsequent pages must use the cursor.
+        ---
+      schema:
+        type: string
+      example: assetType==file;mediaType==application/vnd.adobe.library+dcx
+    urlTTL:
+      name: urlTTL
+      in: query
+      required: false
+      description: |
+        * Provides a **client provided hint** for Time-To-Live(TTL) in seconds for the pre-signed download URL.
+        ---
+          > NOTE:  
+            * The server may adjust it to enforce internal limits.
+            * Clients must rely on the `urlExpirationDate` field in the response for the actual expiration time.
+        ---
+      schema:
+        type: integer
+        default: 14400
+        minimum: 60
+        maximum: 14400
+    size:
+      name: size
+      in: query
+      required: false
+      description: |
+        The desired dimension of the resulting rendition on the longest side, whether that is width or height.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 8192
+    mediaType:
+      name: mediaType
+      in: query
+      required: false
+      description: |
+        The desired content type of the resulting rendition.
+      schema:
+        type: string
+        default: image/png
+      example: image/jpeg
+    policyType:
+      name: policyType
+      in: path
+      required: true
+      description: |
+        The type of policy.
+      schema:
+        $ref: "#/components/schemas/policyType"
+    ifMatch:
+      name: If-Match
+      in: header
+      schema:
+        type: string
+        example: \"33a64df551425fcc55e4d42a148795d9f25f89d4\", W/\"0815\"
+      required: false
+      description: |
+        One or more ETag values to compare, separated by commas.
+        The request will succeed only if the resource's current ETag matches any of the provided values.
+        This allows clients to prevent resource conflicts when multiple clients try to update the same resource simultaneously.
+  headers:
+    requestId:
+      schema:
+        type: string
+        example: 1234567890
+        minLength: 1
+        maxLength: 128
+      description: |
+        The `X-Request-Id` header is used to identify a request.  
+        It can be used to correlate logs and other resources and is intended to be a non-persistent identifier.
+      required: true
+    retryAfter:
+      required: true
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        example: 120
+        description: The number of seconds the user agent should wait to make a follow up request
+      description: |
+        The `Retry-After` header indicates how long the user agent should wait before making a follow-up request.  
+        The Retry-After value can be either an HTTP-date or a number of seconds to delay after receiving the response.  
+        For more details, please head over to [RFC9110](https://datatracker.ietf.org/doc/html/rfc9110#name-retry-after).
+    location:
+      required: true
+      schema:
+        type: string
+        example: https://cloudstorage.adobe.io/v1/projects/1234567890
+      description: |
+        The `Location` header indicates the URL to access the newly created asset.
+    etag:
+      required: true
+      schema:
+        type: string
+        example: "1234567890"
+      description: |
+        The `ETag` header is used to identify a specific version of a resource.  
+        The ETag value can be used to make conditional requests to the server.
+  examples:
+    paginatedProjects:
+      description: |
+        **Get Projects** - The server successfully retrieved the projects
+      value:
+        paging:
+          nextUrl: https://cloudstorage.adobe.io/v1/projects?cursor=eyJvZmZzZXQiOjN9
+          limit: 20
+        items:
+          - assetType: project
+            assetId: urn:aaid:sc:US:7eb8f0f0-dbe8-466d-9f74-84c653dfaf22
+            name: Marketing Launch Plan
+            createdDate: "2024-04-15T10:20:30Z"
+            modifiedDate: "2024-04-20T15:45:10Z"
+            createdBy: 08D81E3B665BE5640A495C2C@AdobeOrg
+            modifiedBy: 08D81E3B665BE5640A495C2C@AdobeOrg
+            path: /Marketing Launch Plan
+            ancestors: []
+            state: active
+          - assetType: project
+            assetId: urn:aaid:sc:US:33132aca-7fef-4b28-93e9-b79dbf4c5f4f
+            name: Brand Refresh
+            createdDate: "2024-03-10T09:12:00Z"
+            modifiedDate: "2024-04-01T08:50:00Z"
+            createdBy: 08D81E3B665BE5640A495C2C@AdobeOrg
+            modifiedBy: A495C2C08D81E3B665BE5640@AdobeOrg
+            path: /Brand Refresh
+            ancestors: []
+            state: active
+          - assetType: project
+            assetId: f860f2fc-7942-4e49-ab37-5e2b32afe97a
+            name: Holiday Campaign
+            createdDate: "2024-01-05T14:00:00Z"
+            modifiedDate: "2024-01-10T10:25:30Z"
+            createdBy: 08D81E3B665BE5640A495C2C@AdobeOrg
+            modifiedBy: 08D81E3B665BE5640A495C2C@AdobeOrg
+            path: /Holiday Campaign
+            ancestors: []
+            state: active
+    unauthorized:
+      description: |
+        **Unauthorized** - The request is unauthorized.
+      value:
+        error_code: unauthorized
+        message: You are not authorized to access this resource.
+    notAcceptable:
+      description: |
+        **Not Acceptable** - The requested representation is not acceptable
+      value:
+        error_code: not_acceptable
+        message: The requested representation is not acceptable.
+    invalidLimitType:
+      description: |
+        **Mismatch Parameter Type** - Provided value of limit parameter is not compatible with the expected type
+      value:
+        error_code: validation_error
+        message: "Provided value: (abc) for query parameter: limit is of invalid type. Allowed Type is Integer"
+    invalidLimitRange:
+      description: |
+        **Invalid Range** - Provided value of limit parameter is out of the allowed range
+      value:
+        error_code: validation_error
+        message: "Provided value: (1000) for query parameter: limit is out of the allowed range. Allowed Range is 1-100"
+    invalidPaginationParameterCombination:
+      description: |
+        **Invalid Combination** - Combination of pagination parameters is invalid
+      value:
+        error_code: validation_error
+        message: "Following query parameters: [cursor and sortBy] are not allowed together"
+    multipleInvalidRequestViolations:
+      description: |
+        **Multiple Violations** - Multiple problems with the request
+      value:
+        error_code: validation_error
+        message: Multiple issues with request, refer details array for more information
+        details:
+          - field: limit
+            value: -2
+            allowedRange: "[1, 100]"
+            message: Value is out of range
+            location: query
+          - field: x-request-id
+            value: ""
+            message: Invalid string length
+            location: header
+            allowedLength: "[1, 128]"
+          - field: sortBy
+            value: created
+            message: Invalid value
+            allowedValues: "[name, +name, -name, modified, +modified, -modified]"
+            location: query
+          - field: filter
+            value: modified eq 2025
+            format: Feed Item Query Language(FIQL)
+            message: Invalid format
+            location: query
+          - field: cursor
+            incompatibleField: sortBy
+            message: Invalid combination
+            location: query
+          - field: limit
+            value: abc
+            message: Invalid type
+            allowedType: Integer
+            location: query
+    rateLimited:
+      description: |
+        **Rate Limited** - The server has rate limited the request
+      value:
+        error_code: rate_limited
+        message: Too many requests have been made. Please try after specified time.
+    runtimeError:
+      description: |
+        **Runtime Error** - An unexpected error occurred while processing the request
+      value:
+        error_code: runtime_error
+        message: An unexpected error occurred while processing your request.
+    singleProject:
+      value:
+        assetId: urn:aaid:sc:US:4f2fc15c-c062-4951-b37b-1f65ed62a174
+        name: My New Project
+        createdDate: "2024-01-05T14:00:00Z"
+        modifiedDate: "2024-01-10T10:25:30Z"
+        createdBy: 08D81E3B665BE5640A495C2C@AdobeOrg
+        modifiedBy: 08D81E3B665BE5640A495C2C@AdobeOrg
+        path: /My New Project
+        ancestors: []
+        assetType: project
+        state: active
+    invalidRequestBody:
+      description: |
+        **Bad Request Body** - The server cannot proceed because the request body is not valid JSON
+      value:
+        error_code: bad_request
+        message: The provided request body is not a valid JSON
+    missingRequestBody:
+      description: |
+        **Missing Request Body** - The server cannot proceed because the request body is missing
+      value:
+        error_code: bad_request
+        message: The request is missing the required body
+    accessErrorProjectCreate:
+      description: |
+        **Project Create Error** - Access to create a project is denied
+      value:
+        error_code: access_error
+        message: You do not have permission to create projects.
+    invalidOperation:
+      description: |
+        **Invalid Operation** - The requested operation is invalid based on the current state of the resource
+      value:
+        error_code: invalid_operation
+        message: The operation is invalid as it resulted in a conflict or is not allowed.
+    invalidContentType:
+      description: |
+        **Invalid Content Type** - The server does not support the provided content type
+      value:
+        error_code: invalid_content_type
+        message: The request content type is not supported.
+    missingRequiredField:
+      description: |
+        **Missing Required Field** - The server cannot proceed because the request body is missing a required field
+      value:
+        error_code: validation_error
+        message: The request body is missing the required field (#name)
+    invalidNameType:
+      description: |
+        **Invalid Name Type** - The server cannot proceed because the name is of invalid type
+      value:
+        error_code: validation_error
+        message: The provided name has an invalid type.
+    invalidNameValue:
+      description: |
+        **Invalid Name Value** - The server cannot proceed because the name is invalid
+      value:
+        error_code: validation_error
+        message: The provided name has an invalid value.
+    invalidAssetIdValue:
+      description: |
+        **Invalid AssetId Value** - The server cannot proceed because the assetId is invalid
+      value:
+        error_code: validation_error
+        message: The provided assetId has an invalid value.
+    accessError:
+      description: |
+        **Access Error** - Access to a resource is denied
+      value:
+        error_code: access_error
+        message: "You do not have following permission(s) to perform this action on the resource: [write, delete]."
+    resourceNotFound:
+      description: |
+        **Resource Not Found** - The requested resource was not found
+      value:
+        error_code: resource_not_found
+        message: The requested resource (urn:uuid:123e4567-e89b-12d3-a456-426614174000) was not found.
+    paginatedAssets:
+      description: |
+        **Paginated Assets** - The server successfully retrieved the assets
+      value:
+        paging:
+          nextUrl: https://cloudstorage.adobe.io/v1/projects/7eb8f0f0-dbe8-466d-9f74-84c653dfaf22/children?cursor=eyJvZmZzZXQiOjN9
+          limit: 20
+        children:
+          - assetType: folder
+            assetId: urn:aaid:sc:US:11111111-aaaa-bbbb-cccc-222222222222
+            name: Design Assets
+            createdDate: "2024-03-01T10:00:00Z"
+            modifiedDate: "2024-04-01T10:30:00Z"
+            createdBy: 08D81E3B665BE5640A495C2C@AdobeOrg
+            modifiedBy: 08D81E3B665BE5640A495C2C@AdobeOrg
+            path: /Marketing Launch Plan/Design Assets
+            ancestors:
+              - urn:aaid:sc:US:f860f2fc-7942-4e49-ab37-5e2b32afe97a
+            state: active
+          - assetType: file
+            assetId: urn:aaid:sc:US:22222222-aaaa-bbbb-cccc-333333333333
+            name: logo.png
+            createdDate: "2024-02-20T09:10:00Z"
+            modifiedDate: "2024-03-05T11:20:00Z"
+            createdBy: 08D81E3B665BE5640A495C2C@AdobeOrg
+            modifiedBy: 08D81E3B665BE5640A495C2C@AdobeOrg
+            path: /Marketing Launch Plan/logo.png
+            ancestors:
+              - urn:aaid:sc:US:11111111-aaaa-bbbb-cccc-222222222222
+            mediaType: image/png
+            size: 2418293
+            state: active
+    200.assetPermissions:
+      description: |
+        **Asset Permissions** - The permissions for the asset
+      value:
+        direct:
+          - id: 13A5316551352CF40A490D35@AdobeID
+            type: user
+            role: edit
+            email: user01@adobetest.com
+            name: test user
+          - id: 11301C2F67F84EA80A494021@AdobeOrg:639451533
+            type: group
+            role: comment
+            name: test group
+            organizationName: Test Org
+          - id: orgEverybody
+            type: predefined
+            organizationName: Example Inc.
+            name: _everybody
+            role: comment
+        pending:
+          - email: john.doe@example.com
+            role: edit
+            created: "2021-01-01T00:00:00Z"
+            id: mailto:john.doe@example.com
+    patchAssetPermissions:
+      description: |
+        **Modify Asset Permissions** - The request body for a patch operation on permissions for an asset
+      value:
+        direct:
+          additions:
+            - recipient: name:Example Group
+              type: group
+              role: edit
+            - recipient: mailto:john.doe@example.com
+              type: user
+              role: comment
+          updates:
+            - id: 13A5316551352CF40A490D35@AdobeID
+              type: user
+              role: edit
+            - id: 11301C2F67F84EA80A494021@AdobeOrg:639451533
+              type: group
+              role: edit
+          deletions:
+            - id: 13A5316551352CF40A490D37@AdobeID
+              type: user
+            - id: 11301C2F67F84EA80A494025@AdobeOrg:639451533
+              type: group
+    singleFolder:
+      value:
+        assetId: urn:aaid:sc:US:4f2fc15c-c062-4951-b37b-1f65ed62a174
+        name: My New Folder
+        createdDate: "2024-01-05T14:00:00Z"
+        modifiedDate: "2024-01-10T10:25:30Z"
+        createdBy: 08D81E3B665BE5640A495C2C@AdobeOrg
+        modifiedBy: 08D81E3B665BE5640A495C2C@AdobeOrg
+        path: /My New Folder
+        ancestors: []
+        assetType: folder
+        state: active
+    accessErrorFolderCreate:
+      description: |
+        **Folder Create Error** - Access to create a folder is denied
+      value:
+        error_code: access_error
+        message: You do not have permission to create folders.
+    singleFile:
+      value:
+        assetType: file
+        assetId: urn:aaid:sc:US:22222222-aaaa-bbbb-cccc-333333333333
+        name: logo.png
+        createdDate: "2024-02-20T09:10:00Z"
+        modifiedDate: "2024-03-05T11:20:00Z"
+        createdBy: 08D81E3B665BE5640A495C2C@AdobeOrg
+        modifiedBy: 08D81E3B665BE5640A495C2C@AdobeOrg
+        path: /Marketing Launch Plan/logo.png
+        ancestors:
+          - urn:aaid:sc:US:11111111-aaaa-bbbb-cccc-222222222222
+        mediaType: image/png
+        size: 2418293
+        state: active
+    etagMismatch:
+      description: |
+        **Precondition Failed** - The request failed due to a precondition
+      value:
+        error_code: etag_mismatch
+        message: Expected etag is different for the current.
+    ancestorNotFound:
+      description: |
+        **Ancestor Not Found** - The requested ancestor was not found
+      value:
+        error_code: resource_not_found
+        message: The requested ancestor specified by baseAssetId was not found.
+    invalidDestination:
+      description: |
+        **Invalid Destination** - The requested destination (path) is invalid
+      value:
+        error_code: validation_error
+        message: The requested destination (path) is invalid.
+    invalidSize:
+      description: |
+        **Invalid Size** - The requested size is invalid
+      value:
+        error_code: validation_error
+        message: The requested size is invalid.
+    unsupportedMediaType:
+      description: |
+        **Unsupported Media Type** - The requested media type is not supported
+      value:
+        error_code: validation_error
+        message: The requested media type is not supported.
+    invalidUploadIdType:
+      description: |
+        **Invalid UploadId Type** - The server cannot proceed because the uploadId is of invalid type
+      value:
+        error_code: validation_error
+        message: The provided uploadId has an invalid type.
+    invalidUsedTransferLinksValue:
+      description: |
+        **Invalid UsedTransferLinks Value** - The server cannot proceed because the usedTransferLinks value is invalid
+      value:
+        error_code: validation_error
+        message: The provided usedTransferLinks value is invalid.
+    singlePolicy:
+      value:
+        policyType: inactive_user_content_purge
+        attributes:
+          enabled: true
+          retention: P2Y
+    patchPolicy:
+      value:
+        - op: replace
+          path: /attributes/enabled
+          value: false
+        - op: remove
+          path: /attributes/retention
+        - op: add
+          path: /attributes/retention
+          value: P2Y
+    invalidAttribute:
+      description: |
+        **Invalid Attribute** - The server cannot proceed because one or more of the attributes is invalid
+      value:
+        error_code: validation_error
+        message: One or more of the attributes is invalid.
+        requestId: 123e4567-e89b-12d3-a456-426614174000
+  responses:
+    paginatedProjectsResponse:
+      description: |
+        **Success** - Paginated response containing an array of project assets with basic information about the project
+        along with paging information.
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/paginatedProjects"
+          examples:
+            paginatedProjects:
+              $ref: "#/components/examples/paginatedProjects"
+    unauthorizedResponse:
+      description: |
+        **Unauthorized** - The request requires user authentication
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+          examples:
+            unauthorized:
+              $ref: "#/components/examples/unauthorized"
+    notAcceptableResponse:
+      description: |
+        **Not Acceptable** - The requested representation is not acceptable
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+          examples:
+            notAcceptable:
+              $ref: "#/components/examples/notAcceptable"
+    invalidRequestPagedResponse:
+      description: |
+        **Unprocessable Request** - The server cannot process the request due to a semantic error
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+          examples:
+            invalidLimitType:
+              $ref: "#/components/examples/invalidLimitType"
+            invalidLimitRange:
+              $ref: "#/components/examples/invalidLimitRange"
+            invalidPaginationParameterCombination:
+              $ref: "#/components/examples/invalidPaginationParameterCombination"
+            multipleInvalidRequestViolations:
+              $ref: "#/components/examples/multipleInvalidRequestViolations"
+    rateLimitResponse:
+      description: |
+        **Too Many Requests** - The request was rejected due to rate limiting
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+        retry-after:
+          $ref: "#/components/headers/retryAfter"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+          examples:
+            rateLimited:
+              $ref: "#/components/examples/rateLimited"
+    runtimeErrorResponse:
+      description: |
+        **Internal Server Error** - An unexpected error occurred while processing the request
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+          examples:
+            runtimeError:
+              $ref: "#/components/examples/runtimeError"
+    invalidRequestResponse:
+      description: |
+        **Invalid Request** - The server cannot process the request due to a client error
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+          examples:
+            invalidRequestBody:
+              $ref: "#/components/examples/invalidRequestBody"
+            missingRequestBody:
+              $ref: "#/components/examples/missingRequestBody"
+    accessErrorProjectCreateResponse:
+      description: |
+        **Forbidden** - The user does not have permission to create projects
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+          examples:
+            accessProjectCreateError:
+              $ref: "#/components/examples/accessErrorProjectCreate"
+    invalidOperationResponse:
+      description: |
+        **Conflict** - The requested operation is invalid based on the current state of the resource
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+          examples:
+            invalidOperation:
+              $ref: "#/components/examples/invalidOperation"
+    invalidContentTypeResponse:
+      description: |
+        **Unsupported Media Type** - The server cannot process the request due to an unsupported media type
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+          examples:
+            invalidContentType:
+              $ref: "#/components/examples/invalidContentType"
+    unprocessableEntityResponse:
+      description: |
+        **Unprocessable Request** - The request cannot be processed due to semantic errors
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+          examples:
+            missingRequiredField:
+              $ref: "#/components/examples/missingRequiredField"
+            invalidNameType:
+              $ref: "#/components/examples/invalidNameType"
+            invalidNameValue:
+              $ref: "#/components/examples/invalidNameValue"
+            invalidAssetIdValue:
+              $ref: "#/components/examples/invalidAssetIdValue"
+    matchedEtagResponse:
+      description: |
+        **Success** - The ETag of the asset matches the etag provided in the headers.
+        The client can safely use the cached version of the asset.
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+        etag:
+          $ref: "#/components/headers/etag"
+    accessErrorResponse:
+      description: |
+        **Forbidden** - The user does not have permission to access the resource
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+          examples:
+            accessErrorResponse:
+              $ref: "#/components/examples/accessError"
+    resourceNotFoundResponse:
+      description: |
+        **Not Found** - The requested resource was not found
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+          examples:
+            resourceNotFound:
+              $ref: "#/components/examples/resourceNotFound"
+    paginatedAssetsResponse:
+      description: |
+        **Success** - Paginated response containing an array of object with each element containing basic information about the project,
+        along with paging information.
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/paginatedAssets"
+          examples:
+            paginatedAssets:
+              $ref: "#/components/examples/paginatedAssets"
+    assetPermissionResponse:
+      description: |
+        **Success** - Effective permission for the user
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            type: object
+            title: AssetPermission
+            description: The effective permission for the user
+            properties:
+              role:
+                $ref: "#/components/schemas/roleEnums"
+          examples:
+            assetPermission:
+              value:
+                role: edit
+    getAssetPermissionsResponse:
+      description: |
+        **Success** - A list of collaborators and their permissions for the asset
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/assetPermissionsResponse"
+          examples:
+            All Permissions:
+              $ref: "#/components/examples/200.assetPermissions"
+    patchAssetPermissionsResponse:
+      description: |
+        **Success/Partial Success**  
+        Patching the permissions was tried and from the response body result of each request can be
+        determined based on the status.
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/patchAssetPermissionsResponse"
+          example:
+            direct:
+              additions:
+                - status: failed
+                  id: 08D81E3B665BE5640A495C2CA@AdobeOrg
+                  type: group
+                  error_code: ec
+                  message: Failed
+                  role: edit
+                - status: successful
+                  id: A495C2C08D81E3B665BE5640B@e
+                  type: user
+                  role: comment
+                - status: failed
+                  id: orgEverybody
+                  type: predefined
+                  error_code: ec
+                  message: Failed
+                  role: edit
+              updates:
+                - status: failed
+                  id: 08D81E3B665BE5640A495C2C@AdobeOrg
+                  type: group
+                  error_code: ec
+                  message: Failed
+                  role: edit
+                - status: successful
+                  id: orgEverybody
+                  type: predefined
+                  role: comment
+              deletions:
+                - status: successful
+                  id: A495C2C08D81E3B665BE5640@e
+                  type: user
+    accessErrorFolderCreateResponse:
+      description: |
+        **Forbidden** - The user does not have permission to create folders
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+          examples:
+            accessFolderCreateError:
+              $ref: "#/components/examples/accessErrorFolderCreate"
+    fileDownloadOKResponse:
+      description: |
+        **Success** - A pre-signed download URL for the asset
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/fileDownloadOKResponse"
+    fileDownloadAcceptedResponse:
+      description: |
+        **Accepted** - Asynchronous job id used to call the status endpoint.
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+        retry-after:
+          $ref: "#/components/headers/retryAfter"
+      content:
+        application/json:
+          schema:
+            type: object
+            title: FileDownloadAcceptedResponse
+            description: Asynchronous job id used to call the status endpoint.
+            properties:
+              jobId:
+                type: string
+                description: The asynchronous job id
+                example: 123e4567-e89b-12d3-a456-426614174000
+          examples:
+            downloadAcceptedResponse:
+              value:
+                jobId: 85f7c90a-a252-4e82-8cf3-3c989829cdf9
+    preconditionFailedResponse:
+      description: |
+        **Precondition Failed** - The request failed due to a precondition
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+          examples:
+            etagMismatch:
+              $ref: "#/components/examples/etagMismatch"
+    fileUploadInitResponse:
+      description: |
+        **Success** - Upload Id along with urls for upload
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            type: object
+            title: FileUploadInitResponse
+            description: Upload Id along with urls for upload
+            properties:
+              uploadId:
+                type: string
+                description: The upload id
+                example: 123e4567-e89b-12d3-a456-426614174000
+              blockSize:
+                type: integer
+                description: The size of each block in bytes
+                example: 1048576
+              urlExpirationDate:
+                allOf:
+                  - $ref: "#/components/schemas/date"
+                description: The expiration date of the pre-signed URL
+              transferLinks:
+                type: array
+                items:
+                  type: object
+                  title: TransferLink
+                  description: The pre-signed URL pointing to the storage location for the block along with the part number
+                  properties:
+                    url:
+                      allOf:
+                        - $ref: "#/components/schemas/url"
+                      description: The pre-signed URL pointing to the storage location for the block
+                    partNumber:
+                      type: integer
+                      description: Index of the block (used to identify the order)
+                      example: 1
+          examples:
+            uploadInitResponse:
+              value:
+                blockSize: 10485760
+                urlExpirationDate: "2025-05-13T09:59:13.267Z"
+                transferLinks:
+                  - partNumber: 1
+                    url: https://example.com/temp/block01
+                  - partNumber: 2
+                    url: https://example.com/temp/block02
+                uploadId: 27ccfae6-72dc-490d-a5c3-0655110cba99
+    fileUploadFinalizeResponse:
+      description: |
+        **Success** - Asynchronous job id used to call the status endpoint.
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+        retry-after:
+          $ref: "#/components/headers/retryAfter"
+      content:
+        application/json:
+          schema:
+            type: object
+            title: FileUploadFinalizeResponse
+            description: Asynchronous job id used to call the status endpoint.
+            properties:
+              jobId:
+                type: string
+                description: The asynchronous job id
+                example: 123e4567-e89b-12d3-a456-426614174000
+          examples:
+            uploadFinalizeResponse:
+              value:
+                jobId: 85f7c90a-a252-4e82-8cf3-3c989829cdf9
+    policyResponse:
+      description: |
+        **Success** - Retrieved information about the policy
+      headers:
+        etag:
+          $ref: "#/components/headers/etag"
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/policy"
+          examples:
+            policyByType:
+              $ref: "#/components/examples/singlePolicy"
+    unprocessableEntityPolicyResponse:
+      description: |
+        **Unprocessable Entity** - The request cannot be processed due to semantic errors
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+          examples:
+            invalidAttribute:
+              $ref: "#/components/examples/invalidAttribute"
+  requestBodies:
+    projectCreateRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            title: ProjectCreateRequest
+            description: Represents a request body for creating a project.
+            nullable: false
+            required:
+              - name
+            properties:
+              name:
+                $ref: "#/components/schemas/assetName"
+    patchAssetPermissions:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/patchAssetPermissionsRequest"
+          examples:
+            patchPermissions:
+              $ref: "#/components/examples/patchAssetPermissions"
+    folderCreateRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            title: FolderCreateRequest
+            description: |
+              Represents a request body for creating a folder.  
+
+              ---
+              > NOTE:  
+              > The client must supply either 
+              > * a `name` (for single folder creation), or
+              > * a `path` (for hierarchy creation) 
+              >depending on the type of folder creation requested.
+              ---
+            nullable: false
+            required:
+              - parentId
+            properties:
+              parentId:
+                allOf:
+                  - $ref: "#/components/schemas/assetId"
+                description: Asset Id of the parent container (project/folder).
+              name:
+                $ref: "#/components/schemas/assetName"
+              path:
+                $ref: "#/components/schemas/path"
+          examples:
+            Single Folder Create Request:
+              value:
+                name: Marketing
+                parentId: urn:aaid:sc:US:f860f2fc-7942-4e49-ab37-5e2b32afe97a
+            Multiple Folders Create Request:
+              value:
+                path: Marketing/2024/CampaignA
+                parentId: urn:aaid:sc:US:f860f2fc-7942-4e49-ab37-5e2b32afe97a
+    fileUploadInitRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            title: FileUploadInitRequest
+            description: |
+              This request body is used to initialize a block based file upload job.
+            properties:
+              size:
+                $ref: "#/components/schemas/fileSize"
+              parentId:
+                allOf:
+                  - $ref: "#/components/schemas/assetId"
+                description: Asset Id of the parent container (project/folder).
+              name:
+                $ref: "#/components/schemas/assetName"
+              mediaType:
+                type: string
+                description: The MIME type of the file
+                example: image/jpeg
+              blockSize:
+                type: integer
+                description: The size of each block in bytes. The block size returned may differ from the size requested.
+                example: 1048576
+            required:
+              - size
+              - parentId
+              - name
+              - mediaType
+    fileUploadFinalizeRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            title: FileUploadFinalizeRequest
+            description: |
+              This request body is used to finalize a block based file upload job.
+            properties:
+              uploadId:
+                type: string
+                description: The upload id
+                example: 123e4567-e89b-12d3-a456-426614174000
+              usedTransferLinks:
+                type: array
+                description: The transfer links used to upload the file
+                items:
+                  type: number
+                  description: The part number of the blocks used for uploading the content
+                minItems: 1
+            required:
+              - uploadId
+              - usedTransferLinks
+          example:
+            uploadId: 123e4567-e89b-12d3-a456-426614174000
+            usedTransferLinks:
+              - 1
+              - 3
+              - 5
+    policyPatchRequest:
+      required: true
+      content:
+        application/json-patch+json:
+          schema:
+            type: array
+            title: PolicyPatchRequest
+            description: |
+              Represents the request body for updating a policy using JSON Patch syntax (RFC 6902).
+              An array of patch operations to be applied to the policy.
+            items:
+              $ref: "#/components/schemas/patchOperation"
+          examples:
+            patchPolicy:
+              $ref: "#/components/examples/patchPolicy"

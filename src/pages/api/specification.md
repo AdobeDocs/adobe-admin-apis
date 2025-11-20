@@ -1,1 +1,1 @@
-<RedoclyAPIBlock src="../assets/index.yml" />
+<RedoclyAPIBlock src="/index.yml" />

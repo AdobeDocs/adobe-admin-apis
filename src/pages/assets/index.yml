@@ -4,7 +4,7 @@ info:
   description: |
     # Overview
 
-    The Policies APIs within the Adobe Admin APIs for Storage Management framework provide a structured and secure way to define, retrieve, and manage retention policies and move restriction policies across Adobe enterprise environments. These APIs are essential for administrators seeking fine-grained control over how assets are managed.
+    The Policies APIs within the Adobe Admin APIs for Storage Management framework provide a structured and secure way to define, retrieve, and managing retention and move restriction policies across Adobe enterprise environments. These APIs are essential for administrators seeking fine-grained control over how assets are managed.
     
   version: v1
 servers:

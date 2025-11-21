@@ -40,11 +40,11 @@ The Move Restrictions Policy determines whether users in your organization can m
 
 - **Enabled (default):**
 
-  When this policy is enabled, users in your organization can move assets into shared projects or folders outside your organization’s storage.
+  You can use this default setting to allow users in your organization to move assets into shared projects or folders outside your organization’s storage.
 
 - **Disabled:**
 
-  When this policy is disabled, users in your organization CANNOT move assets into shared projects or folders outside your organization’s storage.
+  You can use this setting to prevent users in your organization from moving assets into shared projects or folders outside your organization’s storage.
 
 **Note:**  
 

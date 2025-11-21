@@ -7,7 +7,7 @@ info:
     The Policies APIs within the Adobe Admin APIs for Storage Management framework provide a structured and secure way to define, retrieve, and managing retention and move restriction policies across Adobe enterprise environments. These APIs are essential for administrators seeking fine-grained control over how assets are managed.
     
   version: v1
-servers:
+  servers:
   - url: https://cloudstorage.adobe.io/v1
     description: Production Server
     x-audience: prod
@@ -970,9 +970,7 @@ components:
       title: PolicyType
       description: |
         Describes the type of policy.
-      example:
-        - inactive_user_content_purge
-        - asset_ownership_transfer
+      example: inactive_user_content_purge
     policyAttributes:
       type: object
       description: Policy-specific attributes.

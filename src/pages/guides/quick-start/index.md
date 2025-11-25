@@ -39,7 +39,7 @@ Here, you can interact with Adobe Admin APIs for Storage Management’s endpoint
 
 ## Step 5: Managing content with Adobe Admin APIs for Storage Management
 
-You can manage the following types of policies: 
+You can manage the following types of policies:
 
 - [Content Retention policy](#content-retention-policy)
 - [Move Restrictions policy](#move-restrictions-policy)
@@ -54,10 +54,10 @@ To use this policy for your organization, you can configure, retrieve, and updat
 
 The following policy objects are available:
 
-- `policyType`: A string representing the type of policy (Example:  `inactive_user_content_purge`).  
-- `attributes`: An object containing policy-specific settings, including:  
-  - `enabled` (boolean): Whether the policy is active.  
-  - `retention` (string, optional): Retention period in ISO 8601 format.
+| Parameter | Description |
+|---|---|
+| `policyType` | A string representing the type of policy (Example:  `inactive_user_content_purge`).  |
+| `attributes` | An object containing policy-specific settings. Possible values are: <br \> - `enabled` (boolean): Whether the policy is active.  <br \> - `retention` (string, optional): Retention period in ISO 8601 format. |
 
 #### Enabling policy
 
@@ -100,9 +100,11 @@ Sample response:
 
 **Response parameters**
 
-- `policyType`: The type of the policy
-- `attributes.enabled`: Whether the policy is enabled (`true`) or disabled (`false`)
-- `attributes.retention`: Retention period using ISO 8601 duration format (`P2Y` means 2 years)
+| Parameter | Description |
+|---|---|
+| `policyType` | The type of the policy |
+| `attributes.enabled` | Whether the policy is enabled (`true`) or disabled (`false`) |
+| `attributes.retention` | Retention period using ISO 8601 duration format (`P2Y` means 2 years) |
 
 #### Get policy details
 
@@ -136,9 +138,11 @@ Sample response:
 
 Response parameters:
 
-- `policyType`: The type of the policy
-- `attributes.enabled`: Whether the policy is enabled (true) or disabled (false)
-- `attributes.retention`: Retention period using ISO 8601 duration format (P2Y means 2 years)
+| Parameter | Description |
+|---|---|
+| `policyType` | The type of the policy |
+| `attributes.enabled` | Whether the policy is enabled (true) or disabled (false) |
+| `attributes.retention` | Retention period using ISO 8601 duration format (P2Y means 2 years) |
 
 #### Disabling policy
 
@@ -229,9 +233,10 @@ To use this policy for your organization, you can retrieve, enable and disable i
 
 The following policy objects are available:
 
-- `policyType`: A string representing the type of policy (Example: asset_ownership_transfer) 
-- `attributes`: An object containing policy-specific settings, including:
-  - `enabled` (boolean): Whether the policy is active.
+| Parameter | Description |
+|---|---|
+| `policyType` | A string representing the type of policy (Example: asset_ownership_transfer) |
+| `attributes` | An object containing policy-specific settings, including:  <br \> - `enabled` (boolean): Whether the policy is active. |
 
 #### Get policy details
 

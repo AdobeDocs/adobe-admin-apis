@@ -57,7 +57,8 @@ The following policy objects are available:
 | Parameter | Description |
 |---|---|
 | `policyType` | A string representing the type of policy (Example:  `inactive_user_content_purge`).  |
-| `attributes` | An object containing policy-specific settings. Possible values are: <br/> - `enabled` (boolean): Whether the policy is active.  <br/> - `retention` (string, optional): Retention period in ISO 8601 format. |
+| `attributes.enabled` | Indicates whether the policy is active.  |
+|`attributes.retention` | Retention period in ISO 8601 format. |
 
 #### Enabling policy
 
@@ -236,7 +237,7 @@ The following policy objects are available:
 | Parameter | Description |
 |---|---|
 | `policyType` | A string representing the type of policy (Example: asset_ownership_transfer) |
-| `attributes` | An object containing policy-specific settings, including: <br/> - `enabled` (boolean): Whether the policy is active. |
+| `attributes` | An object containing policy-specific settings, for example, the value `enabled` (boolean) indicates whether the policy is active. |
 
 #### Get policy details
 

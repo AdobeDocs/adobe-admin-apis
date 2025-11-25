@@ -39,7 +39,7 @@ Here, you can interact with Adobe Admin APIs for Storage Management’s endpoint
 
 ## Step 5: Managing content with Adobe Admin APIs for Storage Management
 
-You can manage the following types of policies: 
+You can manage the following types of policies:
 
 - [Content Retention policy](#content-retention-policy)
 - [Move Restrictions policy](#move-restrictions-policy)
@@ -57,7 +57,7 @@ The following policy objects are available:
 | Parameter | Description |
 |---|---|
 | `policyType` | A string representing the type of policy (Example:  `inactive_user_content_purge`).  |
-| `attributes` | An object containing policy-specific settings, including:  <br> - `enabled` (boolean): Whether the policy is active.  <br> - `retention` (string, optional): Retention period in ISO 8601 format. |
+| `attributes` | An object containing policy-specific settings. Possible values are: <br \> - `enabled` (boolean): Whether the policy is active.  <br \> - `retention` (string, optional): Retention period in ISO 8601 format. |
 
 #### Enabling policy
 
@@ -236,7 +236,7 @@ The following policy objects are available:
 | Parameter | Description |
 |---|---|
 | `policyType` | A string representing the type of policy (Example: asset_ownership_transfer) |
-| `attributes` | An object containing policy-specific settings, including:  <br> - `enabled` (boolean): Whether the policy is active. |
+| `attributes` | An object containing policy-specific settings, including:  <br \> - `enabled` (boolean): Whether the policy is active. |
 
 #### Get policy details
 

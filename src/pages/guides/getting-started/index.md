@@ -4,8 +4,10 @@ Adobe Admin APIs for Storage Management provide enterprise organizations with pr
 
 With the Adobe Admin APIs for Storage Management, you can:
 
-- Configure and manage content retention policies for inactive users to define how inactive users' assets (stored in Adobe storage for business)  are preserved or permanently deleted when accounts are deactivated.
-- Configure a policy to allow or prevent users in your organization from moving assets into shared projects or folders outside your organization’s storage.
+- Configure and manage a Content Retention Policy for inactive users, defining how their content stored in Adobe Storage for business is retained and permanently deleted after user deactivation.
+- Configure, manage, and associate Content Retention Policies for Work-in-Progress (WIP) content, defining how Creative Cloud Projects that have reached the end of their lifecycle are retained and permanently deleted after a configured retention period.
+- Configure and manage a Content Retention Policy for inactive content, defining how content that has not been modified for a specified period is retained and permanently deleted.
+- Configure a Move Assets Policy to enable or disable users in your organization from moving assets into shared projects or folders outside your organization’s storage.
 
 ## Prerequisites
 

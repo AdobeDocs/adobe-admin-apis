@@ -42,7 +42,7 @@ Here, you can interact with Adobe Admin APIs for Storage Management’s endpoint
 You can manage the following types of policies:
 
 - [Content Retention policy](#content-retention-policy)
-- [Move Assets policy](#move-restrictions-policy)
+- [Move Assets policy](#move-assets-policy)
 
 ### Content retention policy
 

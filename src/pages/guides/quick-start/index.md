@@ -42,7 +42,7 @@ Here, you can interact with Adobe Admin APIs for Storage Management’s endpoint
 You can manage the following types of policies:
 
 - [Content Retention policy](#content-retention-policy)
-- [Move Restrictions policy](#move-restrictions-policy)
+- [Move Assets policy](#move-restrictions-policy)
 
 ### Content retention policy
 
@@ -224,9 +224,9 @@ Sample response:
 }
 ```
 
-### Move Restrictions policy
+### Move Assets policy
 
-The Move Restrictions Policy determines whether users in your organization can move assets into shared projects or folders outside your organization’s storage.
+The Move Assets Policy determines whether users in your organization can move assets into shared projects or folders outside your organization’s storage.
 
 To use this policy for your organization, you can retrieve, enable and disable it using the APIs described below.
 

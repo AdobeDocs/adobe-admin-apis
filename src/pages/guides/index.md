@@ -15,8 +15,8 @@ Adobe storage for business provides enterprise organizations with a centralised 
 
 The Adobe Admin APIs for Storage Management provide all enterprise customers free, programmatic access to a standard set of storage management capabilities to manage content stored in Adobe storage for business. Using Adobe Admin APIs for Storage Management, you can:
 
-- Configure and manage Content Retention Policies for your organization's inactive users' assets stored in Adobe Storage for business
-- Configure and manage a Move Assets Policy to control cross-organization sharing of assets
+- Configure and manage Content Retention Policies for your organization's inactive users' assets stored in Adobe Storage for business.
+- Configure a Move Assets Policy to enable or disable users in your organization from moving assets into shared projects or folders outside your organization’s storage.
 
 This documentation will assist you in:
 

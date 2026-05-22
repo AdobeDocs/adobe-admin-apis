@@ -5,33 +5,140 @@ info:
     # Overview
 
     The Policies APIs within the Adobe Admin APIs for Storage Management framework provide a structured and secure way to define, retrieve, and managing retention and move assets policies across Adobe enterprise environments. These APIs are essential for administrators seeking fine-grained control over how assets are managed.
-    
+
   version: v1
+
 servers:
   - url: https://cloudstorage.adobe.io/v1
     description: Production Server
-    x-audience: prod
+    x-server: prod
 security:
   - Authorization: []
 tags:
+  - name: Projects
+    description: |
+      Projects are durable spaces used by teams to organize and collaborate on cloud documents and related cloud
+      content. Along with serving as a collection, they can be used to point to a particular asset.
   - name: Policies
     description: |
-      Represents a set of rules that governs how assets are managed within the system.
+      Represents a set of rules that govern how assets are managed within the system.
 paths:
-  /policies/org/{policyType}:
+  /projects/{assetId}:
     get:
-      operationId: getPolicy
-      summary: Get a policy by policyType
+      operationId: getProject
+      summary: Get a project by ID
       description: |
-        This endpoint retrieves a specific policy identified by its policyType, provided the user has the necessary permissions.
+        This endpoint retrieves full metadata for a specific Project identified by its assetId. This includes project attributes such as name, type, creation details, and permissions.  
+
+        ---
+        > NOTE:  
+        > * The project must exist and the requester must have at least read-level access.
+        > * If the project is not found or access is denied, appropriate error responses will be returned.
+        > * Discarded projects can be retrieved using this endpoint.
+        > * If the project exists, but the requester does not have the requisite permissions:
+        >   - The API will behave as if the project does not exist.
+        >   - It will return a 404 Not Found response, even though the asset technically exists in the system.
+        ---
       tags:
-        - Policies
+        - Projects
       parameters:
-        - $ref: "#/components/parameters/policyType"
+        - $ref: "#/components/parameters/assetId"
         - $ref: "#/components/parameters/requestId"
       responses:
         "200":
-          $ref: "#/components/responses/policyResponse"
+          description: |
+            **Success** - Retrieved information about the project
+          headers:
+            x-request-id:
+              $ref: "#/components/headers/requestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/projectAsset"
+              examples:
+                projectById:
+                  $ref: "#/components/examples/singleProject"
+        "304":
+          $ref: "#/components/responses/matchedEtagResponse"
+        "401":
+          $ref: "#/components/responses/unauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/accessErrorResponse"
+        "404":
+          $ref: "#/components/responses/resourceNotFoundResponse"
+        "406":
+          $ref: "#/components/responses/notAcceptableResponse"
+        "429":
+          $ref: "#/components/responses/rateLimitResponse"
+        "500":
+          $ref: "#/components/responses/runtimeErrorResponse"
+    delete:
+      operationId: deleteProject
+      summary: Delete project by ID
+      description: |
+        This endpoint deletes(soft deletion) or permanently deletes(hard deletion) an existing CC Project, identified by its `assetId`, along with
+        all its descendant assets, from the organization’s ESM shared storage.
+
+        ---
+        > NOTE:  
+        > * In order to perform hard deletion, the project must be in DELETED state.
+        > * The requester must have sufficient permission to perform destructive actions on the project.
+        > * If the project is not found or access is denied, appropriate error responses will be returned.
+        ---
+      tags:
+        - Projects
+      parameters:
+        - $ref: "#/components/parameters/assetId"
+        - $ref: "#/components/parameters/requestId"
+        - $ref: "#/components/parameters/permanent"
+      responses:
+        "204":
+          description: |
+            **Success** - The project was deleted successfully
+          headers:
+            x-request-id:
+              $ref: "#/components/headers/requestId"
+        "401":
+          $ref: "#/components/responses/unauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/accessErrorResponse"
+        "404":
+          $ref: "#/components/responses/resourceNotFoundResponse"
+        "409":
+          $ref: "#/components/responses/invalidOperationResponse"
+        "412":
+          $ref: "#/components/responses/preconditionFailedResponse"
+        "422":
+          $ref: "#/components/responses/unprocessableEntityResponse"
+        "429":
+          $ref: "#/components/responses/rateLimitResponse"
+        "504":
+          description: |
+            **Operation Timed Out** - The operation took longer than 60 seconds. The operation will continue after the timeout.
+          headers:
+            x-request-id:
+              $ref: "#/components/headers/requestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/errorResponse"
+              examples:
+                operationTimedOut:
+                  $ref: "#/components/examples/operationTimedOut"
+  /policies/org/{policyType}:
+    get:
+      operationId: getOrgPolicy
+      summary: Get an org policy by policyType
+      description: |
+        This endpoint retrieves a specific org policy identified by its policyType, provided the user has the necessary permissions.
+      tags:
+        - Policies
+      parameters:
+        - $ref: "#/components/parameters/orgPolicyType"
+        - $ref: "#/components/parameters/requestId"
+      responses:
+        "200":
+          $ref: "#/components/responses/orgPolicyResponse"
         "400":
           $ref: "#/components/responses/invalidRequestResponse"
         "401":
@@ -45,21 +152,21 @@ paths:
         "500":
           $ref: "#/components/responses/runtimeErrorResponse"
     patch:
-      operationId: patchPolicy
-      summary: Update a policy by policyType
+      operationId: patchOrgPolicy
+      summary: Update an org policy by policyType
       description: |
-        This endpoint updates a specific policy identified by its policyType, provided the user has the necessary permissions.
+        This endpoint updates a specific org policy identified by its policyType, provided the user has the necessary permissions.
       tags:
         - Policies
       parameters:
-        - $ref: "#/components/parameters/policyType"
+        - $ref: "#/components/parameters/orgPolicyType"
         - $ref: "#/components/parameters/ifMatch"
         - $ref: "#/components/parameters/requestId"
       requestBody:
-        $ref: "#/components/requestBodies/policyPatchRequest"
+        $ref: "#/components/requestBodies/orgPolicyPatchRequest"
       responses:
         "200":
-          $ref: "#/components/responses/policyResponse"
+          $ref: "#/components/responses/orgPolicyResponse"
         "400":
           $ref: "#/components/responses/invalidRequestResponse"
         "401":
@@ -72,6 +179,266 @@ paths:
           $ref: "#/components/responses/preconditionFailedResponse"
         "422":
           $ref: "#/components/responses/unprocessableEntityPolicyResponse"
+        "429":
+          $ref: "#/components/responses/rateLimitResponse"
+        "500":
+          $ref: "#/components/responses/runtimeErrorResponse"
+  /policies/asset/{policyType}:
+    get:
+      operationId: getAssetPolicies
+      summary: Get the list of asset policies by policyType
+      description: |
+        This endpoint retrieves the list of asset policies identified by its policyType, provided the user has the necessary permissions.
+      tags:
+        - Policies
+      parameters:
+        - $ref: "#/components/parameters/assetPolicyType"
+        - $ref: "#/components/parameters/policyLimit"
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/requestId"
+      responses:
+        "200":
+          $ref: "#/components/responses/paginatedAssetPoliciesResponse"
+        "401":
+          $ref: "#/components/responses/unauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/accessErrorResponse"
+        "406":
+          $ref: "#/components/responses/notAcceptableResponse"
+        "429":
+          $ref: "#/components/responses/rateLimitResponse"
+        "500":
+          $ref: "#/components/responses/runtimeErrorResponse"
+    post:
+      operationId: createAssetPolicy
+      summary: Create an asset policy by policyType
+      description: |
+        This endpoint creates a specific asset policy identified by its policyType, provided the user has the necessary permissions.
+      tags:
+        - Policies
+      parameters:
+        - $ref: "#/components/parameters/assetPolicyType"
+        - $ref: "#/components/parameters/requestId"
+      requestBody:
+        $ref: "#/components/requestBodies/assetPolicyCreateRequest"
+      responses:
+        "201":
+          $ref: "#/components/responses/assetPolicyResponse"
+        "400":
+          $ref: "#/components/responses/invalidRequestResponse"
+        "401":
+          $ref: "#/components/responses/unauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/accessErrorResponse"
+        "406":
+          $ref: "#/components/responses/notAcceptableResponse"
+        "422":
+          $ref: "#/components/responses/unprocessableEntityPolicyResponse"
+        "429":
+          $ref: "#/components/responses/rateLimitResponse"
+        "500":
+          $ref: "#/components/responses/runtimeErrorResponse"
+  /policies/asset/{policyType}/{policyId}:
+    get:
+      operationId: getAssetPolicy
+      summary: Get an asset policy by policyType and policyId
+      description: |
+        This endpoint retrieves a specific asset policy identified by its policyType and policyId, provided the user has the necessary permissions.
+      tags:
+        - Policies
+      parameters:
+        - $ref: "#/components/parameters/assetPolicyType"
+        - $ref: "#/components/parameters/policyId"
+        - $ref: "#/components/parameters/requestId"
+      responses:
+        "200":
+          $ref: "#/components/responses/assetPolicyResponse"
+        "400":
+          $ref: "#/components/responses/invalidRequestResponse"
+        "401":
+          $ref: "#/components/responses/unauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/accessErrorResponse"
+        "404":
+          $ref: "#/components/responses/resourceNotFoundResponse"
+        "406":
+          $ref: "#/components/responses/notAcceptableResponse"
+        "429":
+          $ref: "#/components/responses/rateLimitResponse"
+        "500":
+          $ref: "#/components/responses/runtimeErrorResponse"
+    patch:
+      operationId: patchAssetPolicy
+      summary: Update an asset policy by policyType and policyId
+      description: |
+        This endpoint updates a specific asset policy identified by its policyType and policyId, provided the user has the necessary permissions.
+      tags:
+        - Policies
+      parameters:
+        - $ref: "#/components/parameters/assetPolicyType"
+        - $ref: "#/components/parameters/policyId"
+        - $ref: "#/components/parameters/ifMatch"
+        - $ref: "#/components/parameters/requestId"
+      requestBody:
+        $ref: "#/components/requestBodies/assetPolicyPatchRequest"
+      responses:
+        "200":
+          $ref: "#/components/responses/assetPolicyResponse"
+        "400":
+          $ref: "#/components/responses/invalidRequestResponse"
+        "401":
+          $ref: "#/components/responses/unauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/accessErrorResponse"
+        "404":
+          $ref: "#/components/responses/resourceNotFoundResponse"
+        "406":
+          $ref: "#/components/responses/notAcceptableResponse"
+        "412":
+          $ref: "#/components/responses/preconditionFailedResponse"
+        "422":
+          $ref: "#/components/responses/unprocessableEntityPolicyResponse"
+        "429":
+          $ref: "#/components/responses/rateLimitResponse"
+        "500":
+          $ref: "#/components/responses/runtimeErrorResponse"
+    delete:
+      operationId: deleteAssetPolicy
+      summary: Delete an asset policy by policyType and policyId
+      description: |
+        This endpoint deletes a specific asset policy identified by its policyType and policyId, provided the user has the necessary permissions.
+      tags:
+        - Policies
+      parameters:
+        - $ref: "#/components/parameters/assetPolicyType"
+        - $ref: "#/components/parameters/policyId"
+        - $ref: "#/components/parameters/ifMatch"
+        - $ref: "#/components/parameters/requestId"
+      responses:
+        "204":
+          description: |
+            **Success** - The policy was deleted successfully
+          headers:
+            etag:
+              $ref: "#/components/headers/etag"
+            x-request-id:
+              $ref: "#/components/headers/requestId"
+        "401":
+          $ref: "#/components/responses/unauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/accessErrorResponse"
+        "404":
+          $ref: "#/components/responses/resourceNotFoundResponse"
+        "406":
+          $ref: "#/components/responses/notAcceptableResponse"
+        "412":
+          $ref: "#/components/responses/preconditionFailedResponse"
+        "422":
+          $ref: "#/components/responses/unprocessableEntityPolicyResponse"
+        "429":
+          $ref: "#/components/responses/rateLimitResponse"
+        "500":
+          $ref: "#/components/responses/runtimeErrorResponse"
+  /policies/asset/{policyType}/{policyId}/add-asset:
+    post:
+      operationId: addAssetPolicyAssociation
+      summary: Add association between an asset and an asset policy
+      description: |
+        This endpoint adds association between an asset and an asset policy, provided the user has the necessary permissions.
+      tags:
+        - Policies
+      parameters:
+        - $ref: "#/components/parameters/assetPolicyType"
+        - $ref: "#/components/parameters/policyId"
+        - $ref: "#/components/parameters/requestId"
+      requestBody:
+        $ref: "#/components/requestBodies/assetPolicyAddAssociationRequest"
+      responses:
+        "200":
+          $ref: "#/components/responses/policyAssociatedAssetResponse"
+        "400":
+          $ref: "#/components/responses/invalidRequestResponse"
+        "401":
+          $ref: "#/components/responses/unauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/accessErrorResponse"
+        "404":
+          $ref: "#/components/responses/resourceNotFoundResponse"
+        "406":
+          $ref: "#/components/responses/notAcceptableResponse"
+        "409":
+          $ref: "#/components/responses/policyAssociationConflictResponse"
+        "429":
+          $ref: "#/components/responses/rateLimitResponse"
+        "500":
+          $ref: "#/components/responses/runtimeErrorResponse"
+  /policies/asset/{policyType}/{policyId}/remove-asset:
+    post:
+      operationId: removeAssetPolicyAssociation
+      summary: Remove association between an asset and an asset policy
+      description: |
+        This endpoint removes association between an asset and an asset policy, provided the user has the necessary permissions.
+      tags:
+        - Policies
+      parameters:
+        - $ref: "#/components/parameters/assetPolicyType"
+        - $ref: "#/components/parameters/policyId"
+        - $ref: "#/components/parameters/requestId"
+      requestBody:
+        $ref: "#/components/requestBodies/assetPolicyRemoveAssociationRequest"
+      responses:
+        "200":
+          description: |
+            **Success** - The policy association was removed successfully
+          headers:
+            x-request-id:
+              $ref: "#/components/headers/requestId"
+        "400":
+          $ref: "#/components/responses/invalidRequestResponse"
+        "401":
+          $ref: "#/components/responses/unauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/accessErrorResponse"
+        "404":
+          $ref: "#/components/responses/resourceNotFoundResponse"
+        "406":
+          $ref: "#/components/responses/notAcceptableResponse"
+        "429":
+          $ref: "#/components/responses/rateLimitResponse"
+        "500":
+          $ref: "#/components/responses/runtimeErrorResponse"
+  /policies/asset/{policyType}/{policyId}/assets:
+    get:
+      operationId: getPolicyAssociatedAssets
+      summary: Get paginated list of assets associated to an asset policy
+      tags:
+        - Policies
+      description: |
+        This endpoint retrieves a paginated list of the assets associated to an asset policy, identified by its policyType and policyId,
+        provided the user has the necessary permissions.
+
+        ---
+        > NOTE:  
+        > * The response supports **cursor-based pagination** and includes a `nextUrl` field when additional pages are available.
+        > * If there are no further results, the `nextUrl` field is omitted.
+        ---
+      parameters:
+        - $ref: "#/components/parameters/assetPolicyType"
+        - $ref: "#/components/parameters/policyId"
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/cursor"
+        - $ref: "#/components/parameters/requestId"
+      responses:
+        "200":
+          $ref: "#/components/responses/paginatedPolicyAssociatedAssetsResponse"
+        "401":
+          $ref: "#/components/responses/unauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/accessErrorResponse"
+        "404":
+          $ref: "#/components/responses/resourceNotFoundResponse"
+        "406":
+          $ref: "#/components/responses/notAcceptableResponse"
         "429":
           $ref: "#/components/responses/rateLimitResponse"
         "500":
@@ -101,6 +468,7 @@ components:
         - resource_not_found
         - not_acceptable
         - invalid_operation
+        - conflict
         - cursor_expired
         - precondition_failed
         - etag_mismatch
@@ -111,6 +479,7 @@ components:
         - rate_limited
         - runtime_error
         - not_implemented
+        - service_unavailable
         - operation_timeout
         - storage_quota_exceeded
     assetTypeEnums:
@@ -129,15 +498,16 @@ components:
         - project
         - library
         - cloudDoc
-    patchPermissionResultEnums:
+        - brand
+    patchRoleResultEnums:
       type: string
-      title: PatchPermissionResultEnums
+      title: PatchRoleResultEnums
       description: |
-        Describes the result of the permission patch for each principal.  
+        Describes the result of the patch operation on the asset roles for each principal.  
 
         ---
         > NOTE:  
-        > This list is not exhaustive and will be updated as new permission patch results are added. Clients should expect new permission patch results to be added in the future.
+        > This list is not exhaustive and is open to future expansion. Clients should be prepared to handle new result values as they are added.
         ---
       enum:
         - successful
@@ -161,6 +531,7 @@ components:
         - folder_copy
         - folder_move
         - project_package
+        - brand_element_finalize
     jobStatusEnums:
       type: string
       title: JobStatusEnums
@@ -176,21 +547,13 @@ components:
         - succeeded
         - failed
         - partially_succeeded
-    asset:
-      description: |
-        Represents a generic asset in the system.
-      required:
-        - assetType
-      oneOf:
-        - $ref: "#/components/schemas/fileAsset"
-        - $ref: "#/components/schemas/folderAsset"
-        - $ref: "#/components/schemas/projectAsset"
-      discriminator:
-        propertyName: assetType
-        mapping:
-          file: "#/components/schemas/fileAsset"
-          folder: "#/components/schemas/folderAsset"
-          project: "#/components/schemas/projectAsset"
+    requestId:
+      type: string
+      title: RequestId
+      description: An identifier provided by the client to identify the request.
+      example: "1234567890"
+      minLength: 1
+      maxLength: 128
     pagination:
       type: object
       title: Pagination
@@ -341,10 +704,30 @@ components:
       additionalProperties: true
     assetName:
       type: string
-      description: The name of the asset (including the extension, in case of a file)
-      minLength: 1
+      description: |
+        The name of the asset (including the extension, in case of a file)
+
+        The name must not be a 
+        * reserved Windows name
+          - `CON`
+          - `PRN`
+          - `AUX`
+          - `NUL`
+          - `COM1` through `COM9`
+          - `LPT1` through `LPT9`
+        * contain any of the following characters: 
+          - `\`
+          - `/`
+          - `:`
+          - `*`
+          - `?`
+          - `"`
+          - `|`
+          - `>`
+          - `<`
       maxLength: 255
       nullable: false
+      pattern: ^(?!^([Cc][Oo][Nn]|[Pp][Rr][Nn]|[Aa][Uu][Xx]|[Nn][Uu][Ll]|[Cc][Oo][Mm][1-9]|[Ll][Pp][Tt][1-9])$)[^\\\/:*?"|><]+$
     autorename:
       type: boolean
       title: Autorename
@@ -403,6 +786,36 @@ components:
               default: folder
           required:
             - assetType
+    brandAsset:
+      type: object
+      title: BrandAsset
+      description: Represents a brand in the system. A brand is a collection of reusable assets, containing elements such as logos, colors, fonts, and graphics.
+      allOf:
+        - $ref: "#/components/schemas/fileAsset"
+        - type: object
+          properties:
+            assetType:
+              type: string
+              default: brand
+          required:
+            - assetType
+    asset:
+      description: |
+        Represents a generic asset in the system.
+      required:
+        - assetType
+      oneOf:
+        - $ref: "#/components/schemas/fileAsset"
+        - $ref: "#/components/schemas/folderAsset"
+        - $ref: "#/components/schemas/projectAsset"
+        - $ref: "#/components/schemas/brandAsset"
+      discriminator:
+        propertyName: assetType
+        mapping:
+          file: "#/components/schemas/fileAsset"
+          folder: "#/components/schemas/folderAsset"
+          project: "#/components/schemas/projectAsset"
+          brand: "#/components/schemas/brandAsset"
     paginatedAssets:
       title: PaginatedAssets
       description: Represents a paginated list of assets
@@ -437,9 +850,81 @@ components:
         - comment
         - undefined
       example: edit
-    baseDirectPermissionEntry:
+    commonPermissions:
       type: object
-      title: BaseDirectPermissionEntry
+      title: CommonPermissions
+      description: Common Permissions for the user on any kind of asset
+      properties:
+        can_share:
+          type: boolean
+          description: Whether the user can share the asset with other users
+          default: false
+        can_comment:
+          type: boolean
+          description: Whether the user can comment on the asset
+          default: false
+        can_download_assets:
+          type: boolean
+          description: Whether the user can download the asset
+          default: false
+      required:
+        - can_share
+        - can_comment
+        - can_download_assets
+    containerOnlyPermissions:
+      type: object
+      title: ContainerOnlyPermissions
+      description: The permissions for the user applicable to container type of asset
+      properties:
+        can_move_assets_inside:
+          type: boolean
+          description: Whether the user can move assets inside the container
+          default: false
+        can_move_assets_outside:
+          type: boolean
+          description: Whether the user can move assets outside the container
+          default: false
+      required:
+        - can_move_assets_inside
+        - can_move_assets_outside
+    projectPermissions:
+      type: object
+      title: ProjectPermissions
+      description: The permissions for the user on a project
+      allOf:
+        - $ref: "#/components/schemas/commonPermissions"
+        - $ref: "#/components/schemas/containerOnlyPermissions"
+        - type: object
+          properties:
+            can_edit_project:
+              type: boolean
+              description: Whether the user can edit the project
+              default: false
+            can_view_project:
+              type: boolean
+              description: Whether the user can view the project
+              default: false
+            can_restore:
+              type: boolean
+              description: Whether the user can restore the project
+              default: false
+            can_delete:
+              type: boolean
+              description: Whether the user can soft delete the project
+              default: false
+            can_permanent_delete:
+              type: boolean
+              description: Whether the user can permanently delete the project
+              default: false
+          required:
+            - can_edit_project
+            - can_view_project
+            - can_restore
+            - can_delete
+            - can_permanent_delete
+    baseDirectRoleEntry:
+      type: object
+      title: BaseDirectRoleEntry
       properties:
         id:
           $ref: "#/components/schemas/principalId"
@@ -453,11 +938,11 @@ components:
         - id
         - name
         - role
-    userDirectPermissionEntry:
+    userDirectRoleEntry:
       type: object
-      title: UserDirectPermissionEntry
+      title: UserDirectRoleEntry
       allOf:
-        - $ref: "#/components/schemas/baseDirectPermissionEntry"
+        - $ref: "#/components/schemas/baseDirectRoleEntry"
         - type: object
           properties:
             type:
@@ -470,11 +955,11 @@ components:
           required:
             - type
             - email
-    groupDirectPermissionEntry:
+    groupDirectRoleEntry:
       type: object
-      title: GroupDirectPermissionEntry
+      title: GroupDirectRoleEntry
       allOf:
-        - $ref: "#/components/schemas/baseDirectPermissionEntry"
+        - $ref: "#/components/schemas/baseDirectRoleEntry"
         - type: object
           properties:
             type:
@@ -486,11 +971,11 @@ components:
           required:
             - type
             - organizationName
-    predefinedGroupsDirectPermissionEntry:
+    predefinedGroupsDirectRoleEntry:
       type: object
-      title: PredefinedGroupsDirectPermissionEntry
+      title: PredefinedGroupsDirectRoleEntry
       allOf:
-        - $ref: "#/components/schemas/baseDirectPermissionEntry"
+        - $ref: "#/components/schemas/baseDirectRoleEntry"
         - type: object
           properties:
             type:
@@ -502,24 +987,24 @@ components:
           required:
             - type
             - organizationName
-    directPermissionEntry:
+    directRoleEntry:
       type: object
-      title: DirectPermissionEntry
+      title: DirectRoleEntry
       description: Represents a principal (user, group, or predefined groups) with associated role.
       oneOf:
-        - $ref: "#/components/schemas/userDirectPermissionEntry"
-        - $ref: "#/components/schemas/groupDirectPermissionEntry"
-        - $ref: "#/components/schemas/predefinedGroupsDirectPermissionEntry"
+        - $ref: "#/components/schemas/userDirectRoleEntry"
+        - $ref: "#/components/schemas/groupDirectRoleEntry"
+        - $ref: "#/components/schemas/predefinedGroupsDirectRoleEntry"
       discriminator:
         propertyName: type
         mapping:
-          user: "#/components/schemas/userDirectPermissionEntry"
-          group: "#/components/schemas/groupDirectPermissionEntry"
-          predefined: "#/components/schemas/predefinedGroupsDirectPermissionEntry"
-    pendingPermissionEntry:
+          user: "#/components/schemas/userDirectRoleEntry"
+          group: "#/components/schemas/groupDirectRoleEntry"
+          predefined: "#/components/schemas/predefinedGroupsDirectRoleEntry"
+    pendingRoleEntry:
       type: object
-      title: PendingPermissionEntry
-      description: Represents a pending permission entry for a user along with the role and the timestamp of the invitation.
+      title: PendingRoleEntry
+      description: Represents a pending role entry for a user along with the role and the timestamp of the invitation.
       properties:
         email:
           type: string
@@ -541,21 +1026,21 @@ components:
         - role
         - created
         - id
-    assetPermissionsResponse:
+    assetRolesResponse:
       type: object
-      title: AssetPermissionsResponse
+      title: AssetRolesResponse
       properties:
         direct:
           type: array
-          title: Direct Permissions
+          title: Direct Roles
           items:
-            $ref: "#/components/schemas/directPermissionEntry"
+            $ref: "#/components/schemas/directRoleEntry"
           default: []
         pending:
           type: array
           title: Pending Invitations
           items:
-            $ref: "#/components/schemas/pendingPermissionEntry"
+            $ref: "#/components/schemas/pendingRoleEntry"
           default: []
     principalTypeEnums:
       description: |
@@ -569,33 +1054,33 @@ components:
         - user
         - group
         - predefined
-    patchAssetPermissionsRequest:
+    patchAssetRolesRequest:
       type: object
-      title: PatchAssetPermissionsRequest
-      description: Represents the request body for a patch operation on permissions for an asset
+      title: PatchAssetRolesRequest
+      description: Represents the request body for a patch operation on roles for an asset
       properties:
         direct:
           type: object
-          title: DirectPermissionsModification
+          title: DirectRolesModification
           properties:
             additions:
               type: array
               title: AdditionsList
-              description: Represents a list of users or groups that are being granted permission for an asset
+              description: Represents a list of users or groups that are being granted role for an asset
               items:
-                description: Represents a user or group that is being granted permission for an asset
+                description: Represents a user or group that is being granted role for an asset
                 type: object
-                title: NewPermissionEntry
+                title: NewRoleEntry
                 properties:
                   recipient:
                     type: string
                     description: |
                       Provides identifier for the recipient. It can be one of the following formats:
-                      | Type of Recipient | Format | Description | Example |
-                      | ----------------- | ------ | ----------- | ------- |
-                      | User              | mailto:<email of the user | Email address of the recipient | mailto:john.doe@example.com |
-                      | Group             | name:<group name> | Group name defined in the organization | name:Example Group |
-                      | Predefined        | name:<predefined principal name> | Predefined principal name | name:_everybody |
+                      | Type of Recipient | Format                           | Description                            | Example                     |
+                      | ----------------- | -------------------------------- | -------------------------------------- | --------------------------- |
+                      | User              | mailto:<email of the user        | Email address of the recipient         | mailto:john.doe@example.com |
+                      | Group             | name:<group name>                | Group name defined in the organization | name:Example Group          |
+                      | Predefined        | name:<predefined principal name> | Predefined principal name              | name:_everybody             |
 
                       **Note for Predefined Principals:**
                       - `_everybody`: Limited to `comment` (grants access to all org users)
@@ -618,7 +1103,7 @@ components:
               items:
                 description: Represents a user or group with a new role
                 type: object
-                title: UpdatedPermissionEntry
+                title: UpdatedRoleEntry
                 properties:
                   id:
                     $ref: "#/components/schemas/principalId"
@@ -639,7 +1124,7 @@ components:
               items:
                 description: Represents a user or group that is being removed from the asset
                 type: object
-                title: DeletionPermissionEntry
+                title: DeletionRoleEntry
                 properties:
                   id:
                     $ref: "#/components/schemas/principalId"
@@ -649,10 +1134,10 @@ components:
               default: []
       required:
         - direct
-    basePatchPermissionEntry:
+    basePatchRoleEntry:
       type: object
-      title: BasePatchPermissionEntry
-      description: Represents a base permission entry
+      title: BasePatchRoleEntry
+      description: Represents a base role entry
       properties:
         id:
           $ref: "#/components/schemas/principalId"
@@ -661,12 +1146,12 @@ components:
       required:
         - id
         - type
-    successfulPatchPermissionEntry:
-      description: Represents a successful permission entry
-      title: SuccessfulPatchPermissionEntry
+    successfulPatchRoleEntry:
+      description: Represents a successful role entry
+      title: SuccessfulPatchRoleEntry
       type: object
       allOf:
-        - $ref: "#/components/schemas/basePatchPermissionEntry"
+        - $ref: "#/components/schemas/basePatchRoleEntry"
         - type: object
           properties:
             status:
@@ -676,12 +1161,12 @@ components:
               $ref: "#/components/schemas/roleEnums"
       required:
         - status
-    failedPatchPermissionEntry:
-      description: Represents a failed permission entry
-      title: FailedPatchPermissionEntry
+    failedPatchRoleEntry:
+      description: Represents a failed role entry
+      title: FailedPatchRoleEntry
       type: object
       allOf:
-        - $ref: "#/components/schemas/basePatchPermissionEntry"
+        - $ref: "#/components/schemas/basePatchRoleEntry"
         - type: object
           properties:
             status:
@@ -698,12 +1183,12 @@ components:
         - status
         - error_code
         - message
-    pendingPatchPermissionEntry:
-      description: Represents a pending permission entry
-      title: PendingPatchPermissionEntry
+    pendingPatchRoleEntry:
+      description: Represents a pending role entry
+      title: PendingPatchRoleEntry
       type: object
       allOf:
-        - $ref: "#/components/schemas/basePatchPermissionEntry"
+        - $ref: "#/components/schemas/basePatchRoleEntry"
         - type: object
           properties:
             status:
@@ -722,53 +1207,262 @@ components:
         - email
         - role
         - created
-    patchPermissionResultEntry:
+    patchRoleResultEntry:
       description: |
-        Represents a permission patch result entry.
-      title: PatchPermissionResultEntry
+        Represents a role patch result entry.
+      title: PatchRoleResultEntry
       required:
         - status
       oneOf:
-        - $ref: "#/components/schemas/successfulPatchPermissionEntry"
-        - $ref: "#/components/schemas/failedPatchPermissionEntry"
-        - $ref: "#/components/schemas/pendingPatchPermissionEntry"
+        - $ref: "#/components/schemas/successfulPatchRoleEntry"
+        - $ref: "#/components/schemas/failedPatchRoleEntry"
+        - $ref: "#/components/schemas/pendingPatchRoleEntry"
       discriminator:
         propertyName: status
         mapping:
-          successful: "#/components/schemas/successfulPatchPermissionEntry"
-          failed: "#/components/schemas/failedPatchPermissionEntry"
-          pending: "#/components/schemas/pendingPatchPermissionEntry"
-    patchAssetPermissionsResponse:
+          successful: "#/components/schemas/successfulPatchRoleEntry"
+          failed: "#/components/schemas/failedPatchRoleEntry"
+          pending: "#/components/schemas/pendingPatchRoleEntry"
+    patchAssetRolesResponse:
       type: object
-      title: PatchAssetPermissionsResponse
+      title: PatchAssetRolesResponse
       properties:
         direct:
-          title: PatchAssetDirectPermissionsResult
+          title: PatchAssetDirectRolesResult
           type: object
           properties:
             additions:
               type: array
               title: AdditionsList
-              description: Status of each permission addition.
+              description: Status of each role addition.
               items:
-                $ref: "#/components/schemas/patchPermissionResultEntry"
+                $ref: "#/components/schemas/patchRoleResultEntry"
               default: []
             updates:
               type: array
               title: UpdatesList
-              description: Status of each permission update.
+              description: Status of each role update.
               items:
-                $ref: "#/components/schemas/patchPermissionResultEntry"
+                $ref: "#/components/schemas/patchRoleResultEntry"
               default: []
             deletions:
               type: array
               title: DeletionsList
-              description: Status of each permission deletion.
+              description: Status of each role deletion.
               items:
-                $ref: "#/components/schemas/patchPermissionResultEntry"
+                $ref: "#/components/schemas/patchRoleResultEntry"
               default: []
       required:
         - direct
+    policyId:
+      type: string
+      title: PolicyId
+      description: A globally unique identifier for the policy.
+      example: 47ab800e-f3bd-4dfa-6788-cd601b366ce9
+    policyType:
+      type: string
+      title: PolicyType
+      description: Describes the type of policy.
+    policyName:
+      type: string
+      title: PolicyName
+      description: Name of the policy
+    assetPolicyAttributes:
+      type: object
+      title: AssetPolicyAttributes
+      description: Represents the attributes of an asset policy.
+      required:
+        - retention
+      properties:
+        retention:
+          type: string
+          description: A duration in ISO 8601 duration format.
+          example: P2Y
+    etag:
+      type: string
+      description: Entity tag used for optimistic concurrency control
+      example: 33a64df551425fcc55e4d42a148795d9f25f89d4
+    appliedAssetPolicy:
+      type: object
+      title: AppliedAssetPolicy
+      description: Represents a policy applied to an asset
+      required:
+        - policyId
+        - policyType
+        - name
+        - policyAppliedDate
+        - attributes
+        - policyEtag
+      properties:
+        policyId:
+          $ref: "#/components/schemas/policyId"
+        policyType:
+          allOf:
+            - $ref: "#/components/schemas/policyType"
+          example: scheduled_content_deletion
+        name:
+          $ref: "#/components/schemas/policyName"
+        policyAppliedDate:
+          allOf:
+            - $ref: "#/components/schemas/date"
+          description: Timestamp when the policy was applied to the asset
+        attributes:
+          $ref: "#/components/schemas/assetPolicyAttributes"
+        policyEtag:
+          $ref: "#/components/schemas/etag"
+    appliedAssetPolicies:
+      type: object
+      title: AppliedAssetPolicies
+      description: Represents the list of policies applied to an asset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/appliedAssetPolicy"
+          default: []
+    projectReferenceResponse:
+      type: object
+      title: ProjectReferenceResponse
+      description: Represents a brand reference associated with a project.
+      properties:
+        referenceId:
+          type: string
+          description: The asset ID (URN) of the referenced brand.
+          example: urn:aaid:sc:US:a0620477-6ba4-3c41-9a4c-ffd7a4a60291
+        referenceType:
+          type: string
+          description: The type of the reference.
+          example: brand
+        asset:
+          $ref: "#/components/schemas/brandAsset"
+    projectReferencesListResponse:
+      type: object
+      title: ProjectReferencesListResponse
+      description: A list of brand references associated with a project.
+      properties:
+        items:
+          type: array
+          description: The list of brand references.
+          items:
+            $ref: "#/components/schemas/projectReferenceResponse"
+    addProjectReferenceRequest:
+      type: object
+      title: AddProjectReferenceRequest
+      description: Request body for adding a brand reference to a project.
+      properties:
+        assetId:
+          type: string
+          description: The asset ID (URN) of the brand to reference.
+          example: urn:aaid:sc:US:a0620477-6ba4-3c41-9a4c-ffd7a4a60291
+        referenceType:
+          type: string
+          description: The type of the reference.
+          example: brand
+      required:
+        - assetId
+        - referenceType
+    copyOperationOptions:
+      type: object
+      title: CopyOperationOptions
+      description: |
+        Optional configuration for controlling common aspects of copy operation. This object allows clients to customize how
+        copy operations are executed.
+      allOf:
+        - $ref: "#/components/schemas/operationOptions"
+        - type: object
+    copyRequest:
+      type: object
+      title: CopyRequest
+      description: |
+        Represents the request body for a copy operation on an asset.
+      nullable: false
+      required:
+        - parentId
+      properties:
+        parentId:
+          allOf:
+            - $ref: "#/components/schemas/assetId"
+          description: Asset Id of the target parent container (project/folder).
+        name:
+          $ref: "#/components/schemas/assetName"
+        options:
+          $ref: "#/components/schemas/copyOperationOptions"
+    jobId:
+      type: string
+      title: JobId
+      description: A globally unique identifier for the asynchronous job
+    moveOperationOptions:
+      type: object
+      title: MoveOperationOptions
+      description: |
+        Optional configuration for controlling common aspects of move operation. This object allows clients to customize how
+        move operations are executed.
+      allOf:
+        - $ref: "#/components/schemas/operationOptions"
+        - type: object
+    moveRequest:
+      type: object
+      title: MoveRequest
+      description: |
+        Represents the request body for a move operation on an asset.
+      nullable: false
+      required:
+        - parentId
+      properties:
+        parentId:
+          allOf:
+            - $ref: "#/components/schemas/assetId"
+          description: Asset Id of the target parent container (project/folder).
+        name:
+          $ref: "#/components/schemas/assetName"
+        options:
+          $ref: "#/components/schemas/moveOperationOptions"
+    commonNonProjectPermissions:
+      type: object
+      title: NonProjectPermissions
+      description: The permissions for the user applicable to non-project type of asset
+      properties:
+        can_edit_assets:
+          type: boolean
+          description: Whether the user can edit the asset
+          default: false
+        can_view_assets:
+          type: boolean
+          description: Whether the user can view the asset
+          default: false
+        can_restore_assets:
+          type: boolean
+          description: Whether the user can restore the asset
+          default: false
+        can_delete_assets:
+          type: boolean
+          description: Whether the user can soft delete the asset
+          default: false
+        can_permanent_delete_assets:
+          type: boolean
+          description: Whether the user can permanently delete the asset
+          default: false
+      required:
+        - can_edit_assets
+        - can_view_assets
+        - can_restore_assets
+        - can_delete_assets
+        - can_permanent_delete_assets
+    folderPermissions:
+      type: object
+      title: FolderPermissions
+      description: The permissions for the user on a folder
+      allOf:
+        - $ref: "#/components/schemas/commonPermissions"
+        - $ref: "#/components/schemas/containerOnlyPermissions"
+        - $ref: "#/components/schemas/commonNonProjectPermissions"
+    filePermissions:
+      type: object
+      title: FilePermissions
+      description: The permissions for the user on a file
+      allOf:
+        - $ref: "#/components/schemas/commonPermissions"
+        - $ref: "#/components/schemas/commonNonProjectPermissions"
     url:
       type: string
       title: URL
@@ -797,7 +1491,7 @@ components:
       example:
         mediaType: application/zip
         size: 234567890
-        url: https://<storage-url>/download?signature=abc123
+        url: https://cloud-storage.adobe.io/download?signature=abc123
         urlExpirationDate: "2025-05-13T10:15:30Z"
     fileSize:
       type: integer
@@ -806,17 +1500,6 @@ components:
       minimum: 1
       format: int64
       example: 1048576
-    jobId:
-      type: string
-      title: JobId
-      description: A globally unique identifier for the asynchronous job
-    requestId:
-      type: string
-      title: RequestId
-      description: An identifier provided by the client to identify the request.
-      example: "1234567890"
-      minLength: 1
-      maxLength: 128
     baseJobStatus:
       type: object
       title: BaseJobStatus
@@ -916,6 +1599,173 @@ components:
       required:
         - downloadResponse
         - status
+    fileCopySucceededJobStatus:
+      type: object
+      title: FileCopySucceededJobStatus
+      description: Represents the status of a file copy succeeded asynchronous job in the system
+      allOf:
+        - $ref: "#/components/schemas/baseJobStatus"
+        - type: object
+          properties:
+            status:
+              type: string
+              default: succeeded
+            asset:
+              $ref: "#/components/schemas/fileAsset"
+      required:
+        - asset
+        - status
+    fileMoveSucceededJobStatus:
+      type: object
+      title: FileMoveSucceededJobStatus
+      description: Represents the status of a file move succeeded asynchronous job in the system
+      allOf:
+        - $ref: "#/components/schemas/baseJobStatus"
+        - type: object
+          properties:
+            status:
+              type: string
+              default: succeeded
+            asset:
+              $ref: "#/components/schemas/fileAsset"
+      required:
+        - asset
+        - status
+    folderCopySucceededJobStatus:
+      type: object
+      title: FolderCopySucceededJobStatus
+      description: Represents the status of a folder copy succeeded asynchronous job in the system
+      allOf:
+        - $ref: "#/components/schemas/baseJobStatus"
+        - type: object
+          properties:
+            status:
+              type: string
+              default: succeeded
+            asset:
+              $ref: "#/components/schemas/folderAsset"
+      required:
+        - asset
+        - status
+    folderMoveSucceededJobStatus:
+      type: object
+      title: FolderMoveSucceededJobStatus
+      description: Represents the status of a folder move succeeded asynchronous job in the system
+      allOf:
+        - $ref: "#/components/schemas/baseJobStatus"
+        - type: object
+          properties:
+            status:
+              type: string
+              default: succeeded
+            asset:
+              $ref: "#/components/schemas/folderAsset"
+      required:
+        - asset
+        - status
+    brandElementMediaType:
+      type: string
+      title: BrandElementMediaType
+      description: The media type of the brand element.
+      example: application/vnd.adobe.element.image+dcx
+    userId:
+      type: string
+      description: The Unique ID for the user in the system
+      example: 46372D2768435C800A494229@techacct.adobe.com
+    brandElementRole:
+      type: object
+      title: BrandElementRole
+      description: |
+        Describes the role of a brand element within the brand. The fields present depend on the element type:
+
+        - **Logo** (binary upload): set `usage: logo` and optionally `priority: primary | secondary`. No role → `[]`.
+        - **Graphic** (binary upload): always pass an empty `elementRoles` array — no role object.
+        - **Font** (JSON content): set `usage: header | footer`. No `priority` field. No role → `[]`.
+        - **Color theme** (JSON content): set `priority: primary | secondary`. No `usage` field. No role → `[]`.
+      properties:
+        usage:
+          type: string
+          description: |
+            The usage type for the element. Present for logo and font elements; omitted for color themes and graphics.
+            - `logo` — logo image element (binary upload).
+            - `header` — font element used as a header style.
+            - `body` — font element used as a body style.
+          enum:
+            - logo
+            - header
+            - body
+          example: logo
+        priority:
+          type: string
+          description: |
+            Priority level. Present for logo and color theme elements; omitted for fonts and graphics.
+            Supported values: `primary`, `secondary`. No priority → pass an empty `elementRoles` array.
+          enum:
+            - primary
+            - secondary
+          example: primary
+    brandElement:
+      type: object
+      title: BrandElement
+      description: Represents an element stored within a brand.
+      properties:
+        elementId:
+          type: string
+          description: Unique element identifier.
+          example: urn:aaid:sc:US:brand-element-7f8bc25d-d173-5a62-c48c-2g76fe73b285
+        name:
+          $ref: "#/components/schemas/assetName"
+        size:
+          $ref: "#/components/schemas/fileSize"
+        mediaType:
+          $ref: "#/components/schemas/brandElementMediaType"
+        createdDate:
+          allOf:
+            - $ref: "#/components/schemas/date"
+          description: ISO 8601 timestamp when the element was created.
+        createdBy:
+          allOf:
+            - $ref: "#/components/schemas/userId"
+          description: User ID of the creator.
+        modifiedDate:
+          allOf:
+            - $ref: "#/components/schemas/date"
+          description: ISO 8601 timestamp when the element was last modified.
+        modifiedBy:
+          allOf:
+            - $ref: "#/components/schemas/userId"
+          description: User ID of the last modifier.
+        elementRoles:
+          type: array
+          description: Roles assigned to the element within the brand.
+          items:
+            $ref: "#/components/schemas/brandElementRole"
+      required:
+        - elementId
+        - name
+        - size
+        - mediaType
+        - createdDate
+        - createdBy
+        - modifiedDate
+        - modifiedBy
+        - elementRoles
+    brandElementFinalizeSucceededJobStatus:
+      type: object
+      title: BrandElementFinalizeSucceededJobStatus
+      description: Represents the status of a brand element finalize succeeded asynchronous job in the system
+      allOf:
+        - $ref: "#/components/schemas/baseJobStatus"
+        - type: object
+          properties:
+            status:
+              type: string
+              default: succeeded
+            element:
+              $ref: "#/components/schemas/brandElement"
+      required:
+        - element
+        - status
     succeededJobStatus:
       description: |
         Represents the status of a succeeded asynchronous job in the system
@@ -925,12 +1775,107 @@ components:
         - $ref: "#/components/schemas/fileUploadSucceededJobStatus"
         - $ref: "#/components/schemas/projectPackageSucceededJobStatus"
         - $ref: "#/components/schemas/fileDownloadSucceededJobStatus"
+        - $ref: "#/components/schemas/fileCopySucceededJobStatus"
+        - $ref: "#/components/schemas/fileMoveSucceededJobStatus"
+        - $ref: "#/components/schemas/folderCopySucceededJobStatus"
+        - $ref: "#/components/schemas/folderMoveSucceededJobStatus"
+        - $ref: "#/components/schemas/brandElementFinalizeSucceededJobStatus"
       discriminator:
         propertyName: jobType
         mapping:
           file_upload: "#/components/schemas/fileUploadSucceededJobStatus"
           project_package: "#/components/schemas/projectPackageSucceededJobStatus"
           file_download: "#/components/schemas/fileDownloadSucceededJobStatus"
+          file_copy: "#/components/schemas/fileCopySucceededJobStatus"
+          file_move: "#/components/schemas/fileMoveSucceededJobStatus"
+          folder_copy: "#/components/schemas/folderCopySucceededJobStatus"
+          folder_move: "#/components/schemas/folderMoveSucceededJobStatus"
+          brand_element_finalize: "#/components/schemas/brandElementFinalizeSucceededJobStatus"
+    folderCopyPartiallySucceededJobStatus:
+      type: object
+      title: FolderCopyPartiallySucceededJobStatus
+      description: Represents the status of a folder copy partially succeeded asynchronous job in the system
+      allOf:
+        - $ref: "#/components/schemas/baseJobStatus"
+        - type: object
+          required:
+            - status
+            - asset
+            - errors
+          properties:
+            status:
+              type: string
+              default: partially_succeeded
+            asset:
+              $ref: "#/components/schemas/folderAsset"
+            errors:
+              type: array
+              description: The errors that occurred during the job
+              items:
+                type: object
+                title: FailedAssetReferenceWithErrorResponse
+                required:
+                  - error_code
+                  - message
+                  - asset
+                allOf:
+                  - $ref: "#/components/schemas/errorResponse"
+                  - type: object
+                    properties:
+                      asset:
+                        title: FailedAssetReference
+                        properties:
+                          assetId:
+                            allOf:
+                              - $ref: "#/components/schemas/assetId"
+                            readOnly: true
+                          name:
+                            type: string
+                            description: Human-readable name of the asset
+                            example: My Asset
+                          assetType:
+                            $ref: "#/components/schemas/assetTypeEnums"
+                        required:
+                          - assetId
+                          - name
+                          - assetType
+    projectPackagePartiallySucceededJobStatus:
+      type: object
+      title: ProjectPackagePartiallySucceededJobStatus
+      description: Represents the status of a project package partially succeeded asynchronous job in the system
+      allOf:
+        - $ref: "#/components/schemas/baseJobStatus"
+        - type: object
+          properties:
+            status:
+              type: string
+              default: partially_succeeded
+            assets:
+              type: array
+              items:
+                $ref: "#/components/schemas/asset"
+            errors:
+              type: array
+              description: The errors that occurred during the job
+              items:
+                $ref: "#/components/schemas/errorResponse"
+      required:
+        - assets
+        - status
+        - errors
+    partiallySucceededJobStatus:
+      description: |
+        Represents the status of a partially succeeded asynchronous job in the system
+      required:
+        - jobType
+      oneOf:
+        - $ref: "#/components/schemas/folderCopyPartiallySucceededJobStatus"
+        - $ref: "#/components/schemas/projectPackagePartiallySucceededJobStatus"
+      discriminator:
+        propertyName: jobType
+        mapping:
+          folder_copy: "#/components/schemas/folderCopyPartiallySucceededJobStatus"
+          project_package: "#/components/schemas/projectPackagePartiallySucceededJobStatus"
     failedJobStatus:
       type: object
       title: FailedJobStatus
@@ -958,48 +1903,90 @@ components:
       oneOf:
         - $ref: "#/components/schemas/runningJobStatus"
         - $ref: "#/components/schemas/succeededJobStatus"
+        - $ref: "#/components/schemas/partiallySucceededJobStatus"
         - $ref: "#/components/schemas/failedJobStatus"
       discriminator:
         propertyName: status
         mapping:
           running: "#/components/schemas/runningJobStatus"
           succeeded: "#/components/schemas/succeededJobStatus"
+          partially_succeeded: "#/components/schemas/partiallySucceededJobStatus"
           failed: "#/components/schemas/failedJobStatus"
-    policyType:
-      type: string
-      title: PolicyType
-      description: |
-        Describes the type of policy.
-      example: inactive_user_content_purge
-    policyAttributes:
+    brandElementsListResponse:
       type: object
-      description: Policy-specific attributes.
-      required:
-        - enabled
+      title: BrandElementsListResponse
+      description: Paginated list of elements inside a brand.
       properties:
-        enabled:
-          type: boolean
-          description: Describes whether the policy is enabled or disabled.
-          example: true
-        retention:
-          type: string
-          description: |
-            Retention period in ISO 8601 duration format (e.g., P2Y for 2 years, P1M for 1 month).
-            This field may be optional depending on the policy type.
-          example: P2Y
-          nullable: true
-    policy:
+        items:
+          type: array
+          description: The list of brand elements.
+          items:
+            $ref: "#/components/schemas/brandElement"
+        paging:
+          $ref: "#/components/schemas/pagination"
+    brandElementFinalizeAcceptedResponse:
       type: object
-      title: Policy
-      description: Represents a policy in the system.
+      title: BrandElementFinalizeAcceptedResponse
+      description: Represents the accepted response for a brand element finalize asynchronous job
+      properties:
+        jobId:
+          $ref: "#/components/schemas/jobId"
+      required:
+        - jobId
+    brandPermissions:
+      type: object
+      title: BrandPermissions
+      description: The permissions for the user on a brand
+      properties:
+        can_share_brand:
+          type: boolean
+          description: Whether the user can share the brand with other users
+          default: false
+        can_edit_brand:
+          type: boolean
+          description: Whether the user can edit the brand
+          default: false
+        can_view_brand:
+          type: boolean
+          description: Whether the user can view the brand
+          default: false
+        can_delete_brand:
+          type: boolean
+          description: Whether the user can soft delete the brand
+          default: false
+      required:
+        - can_share_brand
+        - can_edit_brand
+        - can_view_brand
+        - can_delete_brand
+    orgPolicy:
+      type: object
+      title: OrgPolicy
+      description: Represents an org policy in the system.
       required:
         - policyType
         - attributes
       properties:
         policyType:
-          $ref: "#/components/schemas/policyType"
+          allOf:
+            - $ref: "#/components/schemas/policyType"
+          example: inactive_user_content_purge
         attributes:
-          $ref: "#/components/schemas/policyAttributes"
+          type: object
+          required:
+            - enabled
+          properties:
+            enabled:
+              type: boolean
+              description: Describes whether the policy is enabled or disabled.
+              example: true
+            retention:
+              type: string
+              description: |
+                Retention period in ISO 8601 duration format (e.g., P2Y for 2 years, P1M for 1 month).
+                This field may be optional depending on the policy type.
+              example: P2Y
+              nullable: true
     patchOperation:
       type: object
       title: PatchOperation
@@ -1015,25 +2002,95 @@ components:
             - add
             - remove
             - replace
-            - move
-            - copy
-            - test
         path:
           type: string
           description: |
             A JSON Pointer path specifying the location in the policy to apply the operation.
           pattern: ^(/[^/~]*|/[^/~]*(/[^/~]*)*|)$
-          example: /attributes/enabled
         value:
           description: |
             The value to apply at the specified path.
             Only used for the `add` and `replace` operations.
             schema: {}
-        from:
-          description: |
-            A JSON Pointer path specifying the location in the policy to copy from.
-            Only used for the `move` and `copy` operations.
-          type: string
+    assetPolicy:
+      type: object
+      title: AssetPolicy
+      description: Represents an asset policy in the system.
+      required:
+        - policyId
+        - policyType
+        - attributes
+      properties:
+        policyId:
+          $ref: "#/components/schemas/policyId"
+        policyType:
+          allOf:
+            - $ref: "#/components/schemas/policyType"
+          example: scheduled_content_deletion
+        name:
+          $ref: "#/components/schemas/policyName"
+        attributes:
+          $ref: "#/components/schemas/assetPolicyAttributes"
+        createdDate:
+          allOf:
+            - $ref: "#/components/schemas/date"
+          description: Timestamp when the policy was created
+        modifiedDate:
+          allOf:
+            - $ref: "#/components/schemas/date"
+          description: Timestamp when the policy was modified
+        policyEtag:
+          $ref: "#/components/schemas/etag"
+    paginatedAssetPolicies:
+      title: PaginatedAssetPolicies
+      description: Represents a paginated list of asset policies
+      type: object
+      properties:
+        paging:
+          $ref: "#/components/schemas/pagination"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/assetPolicy"
+    policyAssociatedAsset:
+      type: object
+      title: PolicyAssociatedAsset
+      description: Represents an asset associated to an asset policy in the system.
+      required:
+        - assetId
+        - assetType
+        - name
+        - path
+        - policyAppliedDate
+        - policyAppliedBy
+      properties:
+        assetId:
+          $ref: "#/components/schemas/assetId"
+        assetType:
+          $ref: "#/components/schemas/assetTypeEnums"
+        name:
+          $ref: "#/components/schemas/assetName"
+        path:
+          $ref: "#/components/schemas/path"
+        policyAppliedDate:
+          allOf:
+            - $ref: "#/components/schemas/date"
+          description: Timestamp when the policy was applied
+        policyAppliedBy:
+          allOf:
+            - $ref: "#/components/schemas/userId"
+          description: ID of the user who applied the policy
+    paginatedPolicyAssociatedAssets:
+      title: PaginatedPolicyAssociatedAssets
+      description: Represents a paginated list of policy associated assets
+      type: object
+      properties:
+        paging:
+          $ref: "#/components/schemas/pagination"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/policyAssociatedAsset"
   parameters:
     limit:
       name: limit
@@ -1089,10 +2146,10 @@ components:
       in: query
       required: false
       description: |
-        [FIQL-based](https://datatracker.ietf.org/doc/html/draft-nottingham-atompub-fiql-00) filter string  
+        [FIQL-based](https://datatracker.ietf.org/doc/html/draft-nottingham-atompub-fiql-00) filter string
 
         Following fields are supported for filtering:
-          - `view`: Filters the results to only a specific view (operators allowed are ==). Single value is only supported.
+          - `view`: (**deprecated**) Filters the results to only a specific view (operators allowed are `==`). Single value is only supported.
             The possible values are `yours`, `all`, `shared_with_you`, `discoverable`.
             Here is how each view works:
             - `Yours`:
@@ -1111,20 +2168,34 @@ components:
           - `state`: Filter by project state (operators allowed are ==). Single value is only supported.
             - `active` (default): Filter by active projects.
             - `deleted`: Filter by (soft)deleted projects.
+          - `state`: Filter by asset state (operators allowed are `==`). Single value is only supported.
+              - `active` (default): Filter by active assets.
+              - `deleted`: Filter by (soft)deleted assets.
 
+          - `createdBy`: Filter by project creator (operators allowed are `==` and `!=`). Single value is only supported.
+             - `current_user` is a predefined constant representing the user initiating the request. Currently, this is the sole supported value.
         ---
         > NOTE:  
+        > * The `view` parameter is deprecated and will be removed in a future release. Clients should use the `createdBy` parameter instead.
         > * Only applicable for the first page. Subsequent pages must use the cursor.
         ---
       schema:
         type: string
-      example: view==discoverable
+      examples:
+        All Projects:
+          value: " "
+        Deleted Projects:
+          value: state==deleted
+        Created By Me:
+          value: createdBy==current_user
+        Shared With Me:
+          value: createdBy!=current_user
     requestId:
       name: x-request-id
       in: header
       schema:
         type: string
-        example: 1234567890
+        example: "1234567890"
         minLength: 1
         maxLength: 128
       description: |
@@ -1138,6 +2209,19 @@ components:
         The ID of the asset to get.
       schema:
         $ref: "#/components/schemas/assetId"
+    permanent:
+      name: permanent
+      in: query
+      required: false
+      description: |
+        Permanent used for indicating the mode of delete operation.
+        * If true, the operation will do a permanent delete.
+        * If false, the operation will do a soft delete.
+        * If not provided, the default value is false.
+      schema:
+        type: boolean
+        default: false
+      example: true
     assetsSortBy:
       name: sortBy
       in: query
@@ -1167,9 +2251,9 @@ components:
         [FIQL-based](https://datatracker.ietf.org/doc/html/draft-nottingham-atompub-fiql-00) filter string
 
         Following fields are supported for filtering:
-          - `mediaType`: Filter by media type (operators allowed are ==). Single value is only supported.
-          - `assetType`: Filter by asset type (operators allowed are ==). Single value is only supported.
-          - `state`: Filter by asset state (operators allowed are ==). Single value is only supported.
+          - `mediaType`: Filter by media type (operators allowed are `==` and `=in=`). Multiple values are supported.
+          - `assetType`: Filter by asset type (operators allowed are `==`). Single value is only supported.
+          - `state`: Filter by asset state (operators allowed are `==`). Single value is only supported.
               - `active` (default): Filter by active assets.
               - `deleted`: Filter by (soft)deleted assets.
 
@@ -1179,7 +2263,17 @@ components:
         ---
       schema:
         type: string
-      example: assetType==file;mediaType==application/vnd.adobe.library+dcx
+      examples:
+        All Assets:
+          value: ""
+        Files:
+          value: assetType==file
+        Folders:
+          value: assetType==folder
+        Deleted Assets:
+          value: state==deleted
+        PNG Images:
+          value: mediaType==image/png
     urlTTL:
       name: urlTTL
       in: query
@@ -1216,14 +2310,15 @@ components:
         type: string
         default: image/png
       example: image/jpeg
-    policyType:
+    orgPolicyType:
       name: policyType
       in: path
       required: true
       description: |
-        The type of policy.
+        The type of org policy.
       schema:
         $ref: "#/components/schemas/policyType"
+      example: inactive_user_content_purge
     ifMatch:
       name: If-Match
       in: header
@@ -1235,13 +2330,39 @@ components:
         One or more ETag values to compare, separated by commas.
         The request will succeed only if the resource's current ETag matches any of the provided values.
         This allows clients to prevent resource conflicts when multiple clients try to update the same resource simultaneously.
+    assetPolicyType:
+      name: policyType
+      in: path
+      required: true
+      description: |
+        The type of asset policy.
+      schema:
+        $ref: "#/components/schemas/policyType"
+      example: scheduled_content_deletion
+    policyLimit:
+      name: limit
+      in: query
+      required: false
+      description: |
+        * Provides a hint for the number of items per page.
+        * In cases where multiple elements have the same field value used to split the page, the server may adjust the number of items returned to ensure page boundaries align correctly.
+      schema:
+        type: integer
+        minimum: 50
+        default: 50
+        maximum: 100
+    policyId:
+      name: policyId
+      in: path
+      required: true
+      description: |
+        The id of policy.
+      schema:
+        $ref: "#/components/schemas/policyId"
   headers:
     requestId:
       schema:
-        type: string
-        example: 1234567890
-        minLength: 1
-        maxLength: 128
+        $ref: "#/components/schemas/requestId"
       description: |
         The `X-Request-Id` header is used to identify a request.  
         It can be used to correlate logs and other resources and is intended to be a non-persistent identifier.
@@ -1468,6 +2589,24 @@ components:
       value:
         error_code: resource_not_found
         message: The requested resource (urn:uuid:123e4567-e89b-12d3-a456-426614174000) was not found.
+    etagMismatch:
+      description: |
+        **Precondition Failed** - The request failed due to a precondition
+      value:
+        error_code: etag_mismatch
+        message: Expected etag is different for the current.
+    operationTimedOut:
+      description: |
+        **Operation Timed Out** - The server failed to complete the operation within 60 seconds.
+      value:
+        error_code: operation_timeout
+        message: The operation is taking longer than 60 seconds. The operation is still in progress and will be completed soon.
+    storageQuotaExceeded:
+      description: |
+        **Storage Quota Exceeded** - The user has exceeded their storage quota
+      value:
+        error_code: storage_quota_exceeded
+        message: Your quota has been exceeded. Please try later after cleanup or contact support.
     paginatedAssets:
       description: |
         **Paginated Assets** - The server successfully retrieved the assets
@@ -1500,9 +2639,9 @@ components:
             mediaType: image/png
             size: 2418293
             state: active
-    200.assetPermissions:
+    200.assetRoles:
       description: |
-        **Asset Permissions** - The permissions for the asset
+        **Asset Roles** - The roles for the asset
       value:
         direct:
           - id: 13A5316551352CF40A490D35@AdobeID
@@ -1525,7 +2664,7 @@ components:
             role: edit
             created: "2021-01-01T00:00:00Z"
             id: mailto:john.doe@example.com
-    patchAssetPermissions:
+    patchAssetRoles:
       description: |
         **Modify Asset Permissions** - The request body for a patch operation on permissions for an asset
       value:
@@ -1549,6 +2688,16 @@ components:
               type: user
             - id: 11301C2F67F84EA80A494025@AdobeOrg:639451533
               type: group
+    appliedAssetPolicies:
+      value:
+        items:
+          - policyId: p-123
+            policyType: scheduled_content_deletion
+            name: Governance delete 6 M
+            policyAppliedDate: "2024-01-15T10:30:00Z"
+            attributes:
+              retention: P6M
+            policyEtag: etag1
     singleFolder:
       value:
         assetId: urn:aaid:sc:US:4f2fc15c-c062-4951-b37b-1f65ed62a174
@@ -1582,12 +2731,6 @@ components:
         mediaType: image/png
         size: 2418293
         state: active
-    etagMismatch:
-      description: |
-        **Precondition Failed** - The request failed due to a precondition
-      value:
-        error_code: etag_mismatch
-        message: Expected etag is different for the current.
     ancestorNotFound:
       description: |
         **Ancestor Not Found** - The requested ancestor was not found
@@ -1624,6 +2767,40 @@ components:
       value:
         error_code: validation_error
         message: The provided usedTransferLinks value is invalid.
+    expiredOrAlreadyUsed:
+      description: |
+        **Invalid Operation** - Upload has either expired or has already been finalized
+      value:
+        error_code: invalid_operation
+        message: Upload has either expired or has already been finalized.
+    singleBrand:
+      value:
+        assetId: urn:aaid:sc:US:7f8bc25d-d173-5a62-c48c-2g76fe73b285
+        name: My Brand
+        createdDate: "2026-02-23T14:00:00Z"
+        modifiedDate: "2026-02-23T14:00:00Z"
+        createdBy: 08D81E3B665BE5640A495C2C@AdobeOrg
+        modifiedBy: 08D81E3B665BE5640A495C2C@AdobeOrg
+        path: /My Project/My Brand
+        ancestors:
+          - urn:aaid:sc:US:4f2fc15c-c062-4951-b37b-1f65ed62a174
+        state: active
+        assetType: brand
+        mediaType: application/vnd.adobe.library+dcx
+        size: 0
+    renameBrand:
+      value:
+        assetId: urn:aaid:sc:US:7f8bc25d-d173-5a62-c48c-2g76fe73b285
+        name: My Brand
+        createdDate: "2026-02-23T14:00:00Z"
+        modifiedDate: "2026-02-23T14:00:00Z"
+        createdBy: 08D81E3B665BE5640A495C2C@AdobeOrg
+        modifiedBy: 08D81E3B665BE5640A495C2C@AdobeOrg
+        path: /My Project/My Brand
+        state: active
+        assetType: brand
+        mediaType: application/vnd.adobe.library+dcx
+        size: 0
     inactiveUserContentPurgePolicy:
       value:
         policyType: inactive_user_content_purge
@@ -1655,6 +2832,93 @@ components:
         error_code: validation_error
         message: One or more of the attributes is invalid.
         requestId: 123e4567-e89b-12d3-a456-426614174000
+    paginatedAssetPolicies:
+      description: |
+        **Paginated Asset Policies** - The server successfully retrieved the asset policies
+      value:
+        paging:
+          nextUrl: https://cloudstorage.adobe.io/v1/policies/assets/scheduled_content_purge?cursor=eyJvZmZzZXQiOjN9
+          limit: 20
+        items:
+          - policyId: "123"
+            policyType: scheduled_content_deletion
+            name: Governance delete 6 M
+            attributes:
+              retention: P6M
+            createdDate: "2024-01-05T14:00:00Z"
+            modifiedDate: "2024-01-05T14:00:00Z"
+            policyEtag: etag1
+          - policyId: "456"
+            policyType: scheduled_content_deletion
+            name: administration cleanup 1 Y
+            attributes:
+              retention: P1Y
+            createdDate: "2024-01-05T14:00:00Z"
+            modifiedDate: "2024-01-05T14:00:00Z"
+            policyEtag: etag2
+    createScheduledContentDeletionPolicy:
+      value:
+        name: administration cleanup 1 Y
+        attributes:
+          retention: P1Y
+    scheduledContentDeletionPolicy:
+      value:
+        policyId: 47ab800e-f3bd-4dfa-6788-cd601b366ce9
+        policyType: scheduled_content_deletion
+        name: Governance delete 6 M
+        attributes:
+          retention: P6M
+        createdDate: "2024-01-05T14:00:00Z"
+        modifiedDate: "2024-01-05T14:00:00Z"
+        policyEtag: "1767764438949"
+    patchScheduledContentDeletionPolicy:
+      value:
+        - op: replace
+          path: /name
+          value: Governance delete 6 M
+        - op: replace
+          path: /attributes/retention
+          value: P6M
+    addAssetPolicyAssociation:
+      value:
+        assetId: urn:aaid:sc:US:12345
+    policyAssociatedAsset:
+      value:
+        assetId: "12345"
+        assetType: project
+        name: Project Document 2
+        path: /Project Document 2
+        policyAppliedDate: "2024-01-15T10:30:00Z"
+        policyAppliedBy: guid@authsrc
+    policyAssociationConflict:
+      description: |
+        **Conflict** - Asset already associated with another policy
+      value:
+        error_code: conflict
+        message: Asset already associated with another policy.
+    removeAssetPolicyAssociation:
+      value:
+        assetId: urn:aaid:sc:US:12345
+    paginatedPolicyAssociatedAssets:
+      description: |
+        **Paginated Policy Associated Assets** - The server successfully retrieved the policy associated assets
+      value:
+        paging:
+          nextUrl: https://cloudstorage.adobe.io/v1/policies/assets/scheduled_content_purge/123/assets?cursor=eyJvZmZzZXQiOjUwfQ
+          limit: 20
+        items:
+          - assetId: "12345"
+            assetType: project
+            name: Project Document 1
+            path: /Project Document 1
+            policyAppliedDate: "2024-01-15T10:30:00Z"
+            policyAppliedBy: guid@authsrc
+          - assetId: "67890"
+            assetType: project
+            name: Project Document 2
+            path: /Project Document 2
+            policyAppliedDate: "2024-01-15T10:30:00Z"
+            policyAppliedBy: guid@authsrc
   responses:
     paginatedProjectsResponse:
       description: |
@@ -1851,6 +3115,32 @@ components:
           examples:
             resourceNotFound:
               $ref: "#/components/examples/resourceNotFound"
+    preconditionFailedResponse:
+      description: |
+        **Precondition Failed** - The request failed due to a precondition
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+          examples:
+            etagMismatch:
+              $ref: "#/components/examples/etagMismatch"
+    storageQuotaExceededResponse:
+      description: |
+        **Insufficient Storage** - The request cannot be processed because the storage quota has been exceeded
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+          examples:
+            storageQuotaExceeded:
+              $ref: "#/components/examples/storageQuotaExceeded"
     paginatedAssetsResponse:
       description: |
         **Success** - Paginated response containing an array of object with each element containing basic information about the project,
@@ -1865,9 +3155,9 @@ components:
           examples:
             paginatedAssets:
               $ref: "#/components/examples/paginatedAssets"
-    assetPermissionResponse:
+    projectPermissionResponse:
       description: |
-        **Success** - Effective permission for the user
+        **Success** - Effective permission for the user for a project asset
       headers:
         x-request-id:
           $ref: "#/components/headers/requestId"
@@ -1875,32 +3165,48 @@ components:
         application/json:
           schema:
             type: object
-            title: AssetPermission
-            description: The effective permission for the user
+            title: ProjectEffectivePermissionResponse
+            description: The effective permission for the user for a project asset
             properties:
               role:
                 $ref: "#/components/schemas/roleEnums"
+                deprecated: true
+              permissions:
+                $ref: "#/components/schemas/projectPermissions"
+            required:
+              - permissions
           examples:
-            assetPermission:
+            Project's Effective Permissions:
               value:
                 role: edit
-    getAssetPermissionsResponse:
+                permissions:
+                  can_edit_project: true
+                  can_view_project: true
+                  can_share: true
+                  can_comment: true
+                  can_restore: false
+                  can_delete: false
+                  can_permanent_delete: false
+                  can_download_assets: true
+                  can_move_assets_inside: true
+                  can_move_assets_outside: false
+    getAssetRolesResponse:
       description: |
-        **Success** - A list of collaborators and their permissions for the asset
+        **Success** - A list of collaborators and their roles for the asset
       headers:
         x-request-id:
           $ref: "#/components/headers/requestId"
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/assetPermissionsResponse"
+            $ref: "#/components/schemas/assetRolesResponse"
           examples:
-            All Permissions:
-              $ref: "#/components/examples/200.assetPermissions"
-    patchAssetPermissionsResponse:
+            All Roles:
+              $ref: "#/components/examples/200.assetRoles"
+    patchAssetRolesResponse:
       description: |
         **Success/Partial Success**  
-        Patching the permissions was tried and from the response body result of each request can be
+        Patching the roles was tried and from the response body result of each request can be
         determined based on the status.
       headers:
         x-request-id:
@@ -1908,7 +3214,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/patchAssetPermissionsResponse"
+            $ref: "#/components/schemas/patchAssetRolesResponse"
           example:
             direct:
               additions:
@@ -1943,6 +3249,19 @@ components:
                 - status: successful
                   id: A495C2C08D81E3B665BE5640@e
                   type: user
+    appliedAssetPoliciesResponse:
+      description: |
+        **Success** - The list of policies applied to an asset
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/appliedAssetPolicies"
+          examples:
+            appliedAssetPoliciesResponse:
+              $ref: "#/components/examples/appliedAssetPolicies"
     accessErrorFolderCreateResponse:
       description: |
         **Forbidden** - The user does not have permission to create folders
@@ -1956,6 +3275,126 @@ components:
           examples:
             accessFolderCreateError:
               $ref: "#/components/examples/accessErrorFolderCreate"
+    folderPermissionResponse:
+      description: |
+        **Success** - Effective permission for the user for a folder asset
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            type: object
+            title: FolderEffectivePermissionResponse
+            description: The effective permission for the user for a folder asset
+            properties:
+              role:
+                $ref: "#/components/schemas/roleEnums"
+                deprecated: true
+              permissions:
+                $ref: "#/components/schemas/folderPermissions"
+            required:
+              - permissions
+          examples:
+            Folder's Effective Permissions:
+              value:
+                role: edit
+                permissions:
+                  can_edit_assets: true
+                  can_view_assets: true
+                  can_share: true
+                  can_comment: true
+                  can_restore_assets: false
+                  can_delete_assets: false
+                  can_permanent_delete_assets: false
+                  can_download_assets: true
+                  can_move_assets_inside: true
+                  can_move_assets_outside: false
+    filePermissionResponse:
+      description: |
+        **Success** - Effective permission for the user for a file asset
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            type: object
+            title: FileEffectivePermissionResponse
+            description: The effective permission for the user for a file asset
+            properties:
+              role:
+                $ref: "#/components/schemas/roleEnums"
+                deprecated: true
+              permissions:
+                $ref: "#/components/schemas/filePermissions"
+            required:
+              - permissions
+          examples:
+            File's Effective Permissions:
+              value:
+                role: edit
+                permissions:
+                  can_edit_assets: true
+                  can_view_assets: true
+                  can_share: true
+                  can_comment: true
+                  can_restore_assets: false
+                  can_delete_assets: false
+                  can_permanent_delete_assets: false
+                  can_download_assets: true
+    fileCopyAcceptedResponse:
+      description: |
+        **Accepted** - Request to copy a file was accepted and will be processed asynchronously.
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+        retry-after:
+          $ref: "#/components/headers/retryAfter"
+      content:
+        application/json:
+          schema:
+            type: object
+            title: FileCopyAcceptedResponse
+            description: Asynchronous job id used to call the status endpoint.
+            properties:
+              jobId:
+                $ref: "#/components/schemas/jobId"
+          examples:
+            File Copy Accepted:
+              value:
+                jobId: 85f7c90a-a252-4e82-8cf3-3c989829cdf9
+    fileMoveAcceptedResponse:
+      description: |
+        **Accepted** - Request to move a file was accepted and will be processed asynchronously.
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+        retry-after:
+          $ref: "#/components/headers/retryAfter"
+      content:
+        application/json:
+          schema:
+            type: object
+            title: FileMoveAcceptedResponse
+            description: Asynchronous job id used to call the status endpoint.
+            properties:
+              jobId:
+                $ref: "#/components/schemas/jobId"
+          examples:
+            File Move Accepted:
+              value:
+                jobId: 85f7c90a-a252-4e82-8cf3-3c989829cdf9
+    contentTypeChangeNotAllowedResponse:
+      description: |
+        **Unsupported Media Type** - Content type cannot be changed from original file type.
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
     fileDownloadOKResponse:
       description: |
         **Success** - A pre-signed download URL for the asset
@@ -1989,19 +3428,6 @@ components:
             downloadAcceptedResponse:
               value:
                 jobId: 85f7c90a-a252-4e82-8cf3-3c989829cdf9
-    preconditionFailedResponse:
-      description: |
-        **Precondition Failed** - The request failed due to a precondition
-      headers:
-        x-request-id:
-          $ref: "#/components/headers/requestId"
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/errorResponse"
-          examples:
-            etagMismatch:
-              $ref: "#/components/examples/etagMismatch"
     fileUploadInitResponse:
       description: |
         **Success** - Upload Id along with urls for upload
@@ -2076,9 +3502,38 @@ components:
             uploadFinalizeResponse:
               value:
                 jobId: 85f7c90a-a252-4e82-8cf3-3c989829cdf9
-    policyResponse:
+    brandEffectivePermissionResponse:
       description: |
-        **Success** - Retrieved information about the policy
+        **Success** - Effective permission for the user for a brand asset
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            type: object
+            title: BrandEffectivePermissionResponse
+            description: The effective permission for the user for a brand asset
+            properties:
+              role:
+                $ref: "#/components/schemas/roleEnums"
+                deprecated: true
+              permissions:
+                $ref: "#/components/schemas/brandPermissions"
+            required:
+              - permissions
+          examples:
+            Brand's Effective Permissions:
+              value:
+                role: edit
+                permissions:
+                  can_edit_brand: true
+                  can_view_brand: true
+                  can_share_brand: true
+                  can_delete_brand: false
+    orgPolicyResponse:
+      description: |
+        **Success** - Retrieved org policy
       headers:
         etag:
           $ref: "#/components/headers/etag"
@@ -2087,7 +3542,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/policy"
+            $ref: "#/components/schemas/orgPolicy"
           examples:
             inactiveUserContentPurgePolicy:
               $ref: "#/components/examples/inactiveUserContentPurgePolicy"
@@ -2106,6 +3561,75 @@ components:
           examples:
             invalidAttribute:
               $ref: "#/components/examples/invalidAttribute"
+    paginatedAssetPoliciesResponse:
+      description: |
+        **Success** - Paginated response containing an array of asset policies,
+        along with paging information.
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/paginatedAssetPolicies"
+          examples:
+            paginatedAssetPolicies:
+              $ref: "#/components/examples/paginatedAssetPolicies"
+    assetPolicyResponse:
+      description: |
+        **Success** - Retrieved asset policy
+      headers:
+        etag:
+          $ref: "#/components/headers/etag"
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/assetPolicy"
+          examples:
+            scheduledContentDeletionPolicy:
+              $ref: "#/components/examples/scheduledContentDeletionPolicy"
+    policyAssociatedAssetResponse:
+      description: |
+        **Success** - Associated asset to policy
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/policyAssociatedAsset"
+          examples:
+            scheduledContentDeletionPolicy:
+              $ref: "#/components/examples/policyAssociatedAsset"
+    policyAssociationConflictResponse:
+      description: |
+        **Conflict** - Asset already associated with another policy
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+          examples:
+            policyAssociationConflict:
+              $ref: "#/components/examples/policyAssociationConflict"
+    paginatedPolicyAssociatedAssetsResponse:
+      description: |
+        **Success** - Paginated response containing an array of policy associated assets,
+        along with paging information.
+      headers:
+        x-request-id:
+          $ref: "#/components/headers/requestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/paginatedPolicyAssociatedAssets"
+          examples:
+            paginatedPolicyAssociatedAssets:
+              $ref: "#/components/examples/paginatedPolicyAssociatedAssets"
   requestBodies:
     projectCreateRequest:
       required: true
@@ -2123,15 +3647,31 @@ components:
                 $ref: "#/components/schemas/assetName"
               options:
                 $ref: "#/components/schemas/operationOptions"
-    patchAssetPermissions:
+    projectRenameRequest:
       required: true
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/patchAssetPermissionsRequest"
+            type: object
+            title: ProjectRenameRequest
+            description: Represents a request body for renaming a project.
+            nullable: false
+            required:
+              - name
+            properties:
+              name:
+                $ref: "#/components/schemas/assetName"
+              options:
+                $ref: "#/components/schemas/operationOptions"
+    patchAssetRoles:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/patchAssetRolesRequest"
           examples:
             patchPermissions:
-              $ref: "#/components/examples/patchAssetPermissions"
+              $ref: "#/components/examples/patchAssetRoles"
     folderCreateRequest:
       required: true
       content:
@@ -2172,6 +3712,78 @@ components:
               value:
                 path: Marketing/2024/CampaignA
                 parentId: urn:aaid:sc:US:f860f2fc-7942-4e49-ab37-5e2b32afe97a
+    folderRenameRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            title: FolderRenameRequest
+            description: |
+              Represents a request body for renaming a folder.
+            nullable: false
+            properties:
+              name:
+                $ref: "#/components/schemas/assetName"
+              options:
+                $ref: "#/components/schemas/operationOptions"
+            required:
+              - name
+    fileRenameRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            title: FileRenameRequest
+            description: |
+              Represents a request body for renaming a file.
+            nullable: false
+            properties:
+              name:
+                $ref: "#/components/schemas/assetName"
+              options:
+                $ref: "#/components/schemas/operationOptions"
+            required:
+              - name
+    fileCopyRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/copyRequest"
+          examples:
+            Copy Request With New Name:
+              value:
+                name: Renamed File.png
+                parentId: urn:aaid:sc:US:f860f2fc-7942-4e49-ab37-5e2b32afe97a
+            Copy Request With Original Name:
+              value:
+                parentId: urn:aaid:sc:US:f860f2fc-7942-4e49-ab37-5e2b32afe97a
+            Copy Request with autorename:
+              value:
+                parentId: urn:aaid:sc:US:f860f2fc-7942-4e49-ab37-5e2b32afe97a
+                options:
+                  autorename: true
+    fileMoveRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/moveRequest"
+          examples:
+            Move Request With New Name:
+              value:
+                name: Renamed File.png
+                parentId: urn:aaid:sc:US:f860f2fc-7942-4e49-ab37-5e2b32afe97a
+            Move Request With Original Name:
+              value:
+                parentId: urn:aaid:sc:US:f860f2fc-7942-4e49-ab37-5e2b32afe97a
+            Move Request with autorename:
+              value:
+                parentId: urn:aaid:sc:US:f860f2fc-7942-4e49-ab37-5e2b32afe97a
+                options:
+                  autorename: true
     fileUploadInitRequest:
       required: true
       content:
@@ -2235,15 +3847,188 @@ components:
               - 1
               - 3
               - 5
-    policyPatchRequest:
+    fileReplaceInitRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            title: FileReplacementUploadInitRequest
+            description: |
+              This request body is used to initialize a block based file replacement upload job.
+            properties:
+              size:
+                $ref: "#/components/schemas/fileSize"
+              mediaType:
+                type: string
+                description: The MIME type of the file
+                example: image/jpeg
+              blockSize:
+                type: integer
+                description: The size of each block in bytes. The block size returned may differ from the size requested.
+                example: 1048576
+              options:
+                $ref: "#/components/schemas/operationOptions"
+            required:
+              - size
+              - mediaType
+    brandCreateRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            title: BrandCreateRequest
+            description: Represents a request body for creating a brand.
+            nullable: false
+            required:
+              - name
+              - parentId
+            properties:
+              name:
+                $ref: "#/components/schemas/assetName"
+              parentId:
+                $ref: "#/components/schemas/assetId"
+          examples:
+            createBrand:
+              summary: Create a new brand
+              value:
+                name: My Brand
+                parentId: urn:aaid:sc:US:4f2fc15c-c062-4951-b37b-1f65ed62a174
+    brandRenameRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            title: BrandRenameRequest
+            description: |
+              Represents a request body for renaming a brand.
+            nullable: false
+            properties:
+              name:
+                $ref: "#/components/schemas/assetName"
+            required:
+              - name
+    brandElementUploadInitRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            title: BrandElementUploadInitRequest
+            description: |
+              This request body is used to initialize a block-based upload for a new binary brand element.
+            properties:
+              name:
+                $ref: "#/components/schemas/assetName"
+              size:
+                $ref: "#/components/schemas/fileSize"
+              mediaType:
+                $ref: "#/components/schemas/brandElementMediaType"
+              blockSize:
+                type: integer
+                description: The size of each block in bytes. The block size returned may differ from the size requested.
+                example: 1048576
+              elementRoles:
+                type: array
+                description: |
+                  Roles assigned to the element within the brand.
+                  - **Logo elements**: set `usage: logo` with optional `priority: primary | secondary`. Pass `[]` for no priority.
+                  - **Graphic elements**: always pass `[]` — graphics carry no role.
+                items:
+                  $ref: "#/components/schemas/brandElementRole"
+            required:
+              - name
+              - size
+              - mediaType
+    brandElementUploadFinalizeRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            title: BrandElementUploadFinalizeRequest
+            description: |
+              This request body is used to finalize a block-based upload for a brand element.
+            properties:
+              uploadId:
+                type: string
+                description: Upload session ID from the init response.
+                example: 123e4567-e89b-12d3-a456-426614174000
+              usedTransferLinks:
+                type: array
+                description: The part numbers of the transfer links used for uploading the content.
+                items:
+                  type: number
+                  description: The part number of the blocks used for uploading the content
+                minItems: 1
+            required:
+              - uploadId
+              - usedTransferLinks
+          example:
+            uploadId: 123e4567-e89b-12d3-a456-426614174000
+            usedTransferLinks:
+              - 1
+              - 2
+    brandElementContentRequest:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              metadata:
+                type: object
+                title: BrandElementContentMetadata
+                description: |
+                  JSON metadata for the brand element being created.
+                properties:
+                  name:
+                    $ref: "#/components/schemas/assetName"
+                  description:
+                    type: string
+                    description: Optional description for the brand element.
+                    example: Primary brand font
+                  elementRoles:
+                    type: array
+                    description: |
+                      Roles assigned to the element within the brand.
+                      - **Font elements**: set `usage: header | body`. No `priority` field. Pass `[]` for no role.
+                      - **Color theme elements**: set `priority: primary | secondary`. No `usage` field. Pass `[]` for no role.
+                    items:
+                      $ref: "#/components/schemas/brandElementRole"
+                required:
+                  - name
+              data:
+                type: string
+                format: binary
+                description: |
+                  The JSON content of the brand element. The `Content-Type` header of this part determines
+                  the element's media type. Supported types:
+
+                  - `application/vnd.adobe.element.colortheme+dcx` — color palette. Body must be a JSON
+                    object with `mood` (string) and `swatches` (array of swatch arrays). A minimum of 2
+                    swatches is required. Each swatch is an array of color stop objects with `mode`, `value`
+                    (`r`, `g`, `b`), and `alpha` fields.
+                  - `application/vnd.adobe.element.font+dcx` — font definition.
+            required:
+              - metadata
+              - data
+          encoding:
+            metadata:
+              contentType: application/json
+            data:
+              contentType: application/vnd.adobe.element.font+dcx, application/vnd.adobe.element.colortheme+dcx
+    orgPolicyPatchRequest:
       required: true
       content:
         application/json-patch+json:
           schema:
             type: array
-            title: PolicyPatchRequest
+            title: OrgPolicyPatchRequest
             description: |
-              Represents the request body for updating a policy using JSON Patch syntax (RFC 6902).
+              Represents the request body for updating an org policy using JSON Patch syntax.
               An array of patch operations to be applied to the policy.
             items:
               $ref: "#/components/schemas/patchOperation"
@@ -2252,3 +4037,69 @@ components:
               $ref: "#/components/examples/patchInactiveUserContentPurgePolicy"
             assetOwnershipTransferPolicy:
               $ref: "#/components/examples/patchAssetOwnershipTransferPolicy"
+    assetPolicyCreateRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            title: AssetPolicyCreateRequest
+            description: Represents the request body for creating an asset policy.
+            required:
+              - name
+              - attributes
+            properties:
+              name:
+                $ref: "#/components/schemas/policyName"
+              attributes:
+                $ref: "#/components/schemas/assetPolicyAttributes"
+          examples:
+            scheduledContentDeletionPolicy:
+              $ref: "#/components/examples/createScheduledContentDeletionPolicy"
+    assetPolicyPatchRequest:
+      required: true
+      content:
+        application/json-patch+json:
+          schema:
+            type: array
+            title: AssetPolicyPatchRequest
+            description: |
+              Represents the request body for updating an asset policy using JSON Patch syntax.
+              An array of patch operations to be applied to the policy.
+            items:
+              $ref: "#/components/schemas/patchOperation"
+          examples:
+            scheduledContentDeletionPolicy:
+              $ref: "#/components/examples/patchScheduledContentDeletionPolicy"
+    assetPolicyAddAssociationRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            title: AssetPolicyAddAssociationRequest
+            description: Represents the request body for adding association between an asset and an asset policy.
+            required:
+              - assetId
+            properties:
+              assetId:
+                $ref: "#/components/schemas/assetId"
+          examples:
+            assetPolicyAddAssociationRequest:
+              $ref: "#/components/examples/addAssetPolicyAssociation"
+    assetPolicyRemoveAssociationRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            title: AssetPolicyRemoveAssociationRequest
+            description: Represents the request body for removing association between an asset and an asset policy.
+            required:
+              - assetId
+            properties:
+              assetId:
+                $ref: "#/components/schemas/assetId"
+          examples:
+            assetPolicyRemoveAssociationRequest:
+              $ref: "#/components/examples/removeAssetPolicyAssociation"

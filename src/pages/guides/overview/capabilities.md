@@ -32,6 +32,39 @@ The content retention policy governs the assets of inactive (deactivated) users 
 - Behance assets
 - Portfolio assets
 
+## Content Retention Policy for Work-in-Progress (WIP) Content
+
+Admins can create one or more content retention policies to manage the lifecycle of WIP (Work-in-Progress) Content within an organization. WIP content refers to Creative Cloud Projects stored in the Adobe cloud for business.
+
+The Content Retention Policy for Work-in-Progress (WIP) content defines how long Creative Cloud Projects are retained after being marked as complete, before they are permanently deleted.
+
+**Key points:**
+
+- **Configuring retention policies:** Admins can create one or more content retention policies for WIP Content within an organization.
+- **Marking a Project as Complete:** A Creative Cloud Project is considered Marked as Complete when it has reached the end of its working lifecycle and is no longer active work. This status is set through an integration with an authorized external system—such as a project management or workflow tool. The external system explicitly signals that the Project has reached lifecycle completion and based on that the Adobe Admin API is invoked to kickstart retention.
+- **Policy application and precedence:** When a Project is identified as Complete, the retention period begins based on the Content Retention Policy that is associated with that Project at that time by the Admin. If multiple policies apply to the same Project, the policy with the earliest retention date takes precedence.
+- **Retention lifecycle:**
+
+  | Stage                    | What happens                                         |
+  |--------------------------|------------------------------------------------------|
+  | Project marked complete  | Retention period begins                              |
+  | Retention period ends    | Project is soft-deleted and moves to Deleted view    |
+  | 30 days after soft delete| Project is permanently and irrecoverably deleted     |
+
+  During the soft-delete window, users may restore the Project and resume work. See **Restoring a Project** below.
+- **Restoring a Project:**
+
+  End-users can restore a soft-deleted Project within the 30-day window. On restore:
+
+  - The Project is removed from the Deleted view and becomes active again.
+  - The original retention period does not automatically restart.
+  - Retention will only re-apply if an admin explicitly re-associates a retention policy with the Project.
+  - If the Project is subsequently marked as Complete again by an authorized external system, a new retention period begins anchored to the new completion date.
+- **Policy modification:** The retention period of a policy can be extended or shortened. Changes apply to all active Projects governed by the policy, calculated from each Project’s original retention start date.
+
+  **Note:** If a retention period is shortened and a governed Project has already been in retention longer than the new period, that Project will be immediately queued for soft deletion. Admins should audit active Projects before shortening a policy period.
+- **Policy deletion:** Deleting a Content Retention Policy for WIP Content immediately stops enforcement for all Projects governed by it. Projects are not deleted because of policy deletion — they remain active until a new policy is associated and triggered.
+
 ## Move Assets Policy
 
 The Move Assets Policy determines whether users in your organization can move assets into shared projects or folders outside your organization’s storage.

@@ -23,43 +23,20 @@ tags:
     description: |
       Represents a set of rules that govern how assets are managed within the system.
 paths:
-  /projects/{assetId}:
+  /projects/{assetId}/policies:
     get:
-      operationId: getProject
-      summary: Get a project by ID
-      description: |
-        This endpoint retrieves full metadata for a specific Project identified by its assetId. This includes project attributes such as name, type, creation details, and permissions.  
-
-        ---
-        > NOTE:  
-        > * The project must exist and the requester must have at least read-level access.
-        > * If the project is not found or access is denied, appropriate error responses will be returned.
-        > * Discarded projects can be retrieved using this endpoint.
-        > * If the project exists, but the requester does not have the requisite permissions:
-        >   - The API will behave as if the project does not exist.
-        >   - It will return a 404 Not Found response, even though the asset technically exists in the system.
-        ---
+      operationId: getProjectPolicies
+      summary: Get all the policies applied to a project
       tags:
         - Projects
+      description: |
+        The endpoint retrieves all the policies applied to a specific project, identified by its `assetId`.
       parameters:
         - $ref: "#/components/parameters/assetId"
         - $ref: "#/components/parameters/requestId"
       responses:
         "200":
-          description: |
-            **Success** - Retrieved information about the project
-          headers:
-            x-request-id:
-              $ref: "#/components/headers/requestId"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/projectAsset"
-              examples:
-                projectById:
-                  $ref: "#/components/examples/singleProject"
-        "304":
-          $ref: "#/components/responses/matchedEtagResponse"
+          $ref: "#/components/responses/appliedAssetPoliciesResponse"
         "401":
           $ref: "#/components/responses/unauthorizedResponse"
         "403":
@@ -72,59 +49,6 @@ paths:
           $ref: "#/components/responses/rateLimitResponse"
         "500":
           $ref: "#/components/responses/runtimeErrorResponse"
-    delete:
-      operationId: deleteProject
-      summary: Delete project by ID
-      description: |
-        This endpoint deletes(soft deletion) or permanently deletes(hard deletion) an existing CC Project, identified by its `assetId`, along with
-        all its descendant assets, from the organization’s ESM shared storage.
-
-        ---
-        > NOTE:  
-        > * In order to perform hard deletion, the project must be in DELETED state.
-        > * The requester must have sufficient permission to perform destructive actions on the project.
-        > * If the project is not found or access is denied, appropriate error responses will be returned.
-        ---
-      tags:
-        - Projects
-      parameters:
-        - $ref: "#/components/parameters/assetId"
-        - $ref: "#/components/parameters/requestId"
-        - $ref: "#/components/parameters/permanent"
-      responses:
-        "204":
-          description: |
-            **Success** - The project was deleted successfully
-          headers:
-            x-request-id:
-              $ref: "#/components/headers/requestId"
-        "401":
-          $ref: "#/components/responses/unauthorizedResponse"
-        "403":
-          $ref: "#/components/responses/accessErrorResponse"
-        "404":
-          $ref: "#/components/responses/resourceNotFoundResponse"
-        "409":
-          $ref: "#/components/responses/invalidOperationResponse"
-        "412":
-          $ref: "#/components/responses/preconditionFailedResponse"
-        "422":
-          $ref: "#/components/responses/unprocessableEntityResponse"
-        "429":
-          $ref: "#/components/responses/rateLimitResponse"
-        "504":
-          description: |
-            **Operation Timed Out** - The operation took longer than 60 seconds. The operation will continue after the timeout.
-          headers:
-            x-request-id:
-              $ref: "#/components/headers/requestId"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/errorResponse"
-              examples:
-                operationTimedOut:
-                  $ref: "#/components/examples/operationTimedOut"
   /policies/org/{policyType}:
     get:
       operationId: getOrgPolicy

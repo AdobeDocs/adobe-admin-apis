@@ -24,13 +24,12 @@ Programmatically access storage management capabilities to manage content stored
 
 ## Overview
 
-The Adobe Admin APIs for Storage Management provide all enterprise customers with free, programmatic access to a standard set of storage management capabilities for managing content stored in Adobe storage for business.
+The Adobe Admin APIs for Storage Management provide all enterprise customers with free, programmatic access to a standard set of storage management capabilities to manage content stored in Adobe storage for business.
 
 With the Adobe Admin APIs for Storage Management, you can:
 
-- Configure and manage a Content Retention Policy for inactive users, defining how their content stored in Adobe Storage for business is retained after user deactivation and permanently deleted after a configured retention period.
-- Configure, manage, and associate Content Retention Policies for Work-in-Progress (WIP) content, defining how Creative Cloud Projects that have reached the end of their lifecycle are retained and permanently deleted after the configured retention period.
-- Configure a Move Assets Policy to enable or disable users in your organization from moving assets to shared projects or folders outside your organization’s storage.
+- Configure and manage a Content Retention Policy for inactive users, defining how their content stored in Adobe Storage for business is retained and permanently deleted after user deactivation.
+- Configure a Move Assets Policy to enable or disable users in your organization from moving assets into shared projects or folders outside your organization’s storage.
 
 ## What you’ll learn
 

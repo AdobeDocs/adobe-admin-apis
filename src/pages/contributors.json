@@ -6,20 +6,22 @@
     {
       "page": "/",
       "avatars": [
+        "https://avatars.githubusercontent.com/u/120194874?v=4",
         "https://avatars.githubusercontent.com/u/160894503?v=4",
         "https://avatars.githubusercontent.com/u/115529590?v=4",
         "https://avatars.githubusercontent.com/u/41382203?v=4"
       ],
-      "lastUpdated": "5/22/2026"
+      "lastUpdated": "6/2/2026"
     },
     {
       "page": "/api/",
       "avatars": [
+        "https://avatars.githubusercontent.com/u/120194874?v=4",
         "https://avatars.githubusercontent.com/u/160894503?v=4",
         "https://avatars.githubusercontent.com/u/115529590?v=4",
         "https://avatars.githubusercontent.com/u/41382203?v=4"
       ],
-      "lastUpdated": "5/22/2026"
+      "lastUpdated": "6/2/2026"
     },
     {
       "page": "/api/specification",
@@ -41,27 +43,30 @@
     {
       "page": "/guides/",
       "avatars": [
+        "https://avatars.githubusercontent.com/u/120194874?v=4",
         "https://avatars.githubusercontent.com/u/160894503?v=4",
         "https://avatars.githubusercontent.com/u/115529590?v=4",
         "https://avatars.githubusercontent.com/u/41382203?v=4"
       ],
-      "lastUpdated": "5/22/2026"
+      "lastUpdated": "6/2/2026"
     },
     {
       "page": "/guides/getting-started/",
       "avatars": [
+        "https://avatars.githubusercontent.com/u/120194874?v=4",
         "https://avatars.githubusercontent.com/u/160894503?v=4",
         "https://avatars.githubusercontent.com/u/115529590?v=4"
       ],
-      "lastUpdated": "5/22/2026"
+      "lastUpdated": "6/2/2026"
     },
     {
       "page": "/guides/getting-started/authentication",
       "avatars": [
+        "https://avatars.githubusercontent.com/u/120194874?v=4",
         "https://avatars.githubusercontent.com/u/160894503?v=4",
         "https://avatars.githubusercontent.com/u/115529590?v=4"
       ],
-      "lastUpdated": "5/26/2026"
+      "lastUpdated": "6/2/2026"
     },
     {
       "page": "/guides/getting-started/console",
@@ -80,10 +85,11 @@
     {
       "page": "/guides/overview/capabilities",
       "avatars": [
+        "https://avatars.githubusercontent.com/u/120194874?v=4",
         "https://avatars.githubusercontent.com/u/160894503?v=4",
         "https://avatars.githubusercontent.com/u/115529590?v=4"
       ],
-      "lastUpdated": "5/22/2026"
+      "lastUpdated": "6/2/2026"
     },
     {
       "page": "/guides/overview/limits",
@@ -102,10 +108,11 @@
     {
       "page": "/guides/quick-start/",
       "avatars": [
+        "https://avatars.githubusercontent.com/u/120194874?v=4",
         "https://avatars.githubusercontent.com/u/160894503?v=4",
         "https://avatars.githubusercontent.com/u/115529590?v=4"
       ],
-      "lastUpdated": "5/22/2026"
+      "lastUpdated": "6/2/2026"
     }
   ],
   ":type": "sheet"

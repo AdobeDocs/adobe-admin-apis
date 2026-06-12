@@ -272,7 +272,7 @@ Use the `POST /policies/asset/{policyType}` request to create a new WIP retentio
 
 ```bash
 curl -X POST \
-  'https://cloudstorage-stage.adobe.io/alpha/policies/asset/scheduled_content_deletion' \
+  'https://cloudstorage-stage.adobe.io/v1/policies/asset/scheduled_content_deletion' \
   -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
   -H 'Content-Type: application/json' \
   -H 'x-request-id: 1234567890' \
@@ -313,7 +313,7 @@ Use the `GET /policies/asset/{policyType}/{policyId}` request to retrieve a spec
 
 ```bash
 curl -X GET \
-  'https://cloudstorage-stage.adobe.io/alpha/policies/asset/scheduled_content_deletion/{policyId}' \
+  'https://cloudstorage-stage.adobe.io/v1/policies/asset/scheduled_content_deletion/{policyId}' \
   -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
   -H 'x-request-id: 1234567890'
 ```
@@ -342,7 +342,7 @@ Use a `GET /policies/{policyType}` request to list all WIP retention policies fo
 
 ```bash
 curl -X GET \
-  'https://cloudstorage-stage.adobe.io/alpha/policies/asset/scheduled_content_deletion?limit=50' \
+  'https://cloudstorage-stage.adobe.io/v1/policies/asset/scheduled_content_deletion?limit=50' \
   -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
   -H 'x-request-id: 1234567890'
 ```
@@ -352,7 +352,7 @@ curl -X GET \
 ```json
 {
   "paging": {
-    "nextUrl": "https://cloudstorage-stage.adobe.io/alpha/policies/asset/scheduled_content_deletion?cursor=eyJvZmZzZXQiOjJ9",
+    "nextUrl": "https://cloudstorage-stage.adobe.io/v1/policies/asset/scheduled_content_deletion?cursor=eyJvZmZzZXQiOjJ9",
     "limit": 50
   },
   "items": [
@@ -378,7 +378,7 @@ Use a `PATCH /policies/asset//{policyType}/{policyId}` request to modify an exis
 **Request**
 ```bash
 curl -X PATCH \
-  'https://cloudstorage-stage.adobe.io/alpha/policies/asset/scheduled_content_deletion/{policyId}' \
+  'https://cloudstorage-stage.adobe.io/v1/policies/asset/scheduled_content_deletion/{policyId}' \
   -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
   -H 'If-Match: "YOUR_CURRENT_ETAG"' \
   -H 'Content-Type: application/json-patch+json' \
@@ -418,7 +418,7 @@ Deleting a policy immediately stops enforcement for all associated projects. Pro
 
 ```bash
 curl -X DELETE \
-  'https://cloudstorage-stage.adobe.io/alpha/policies/asset/scheduled_content_deletion/{policyId}' \
+  'https://cloudstorage-stage.adobe.io/v1/policies/asset/scheduled_content_deletion/{policyId}' \
   -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
   -H 'If-Match: "YOUR_CURRENT_ETAG"' \
   -H 'x-request-id: 1234567890'
@@ -438,7 +438,7 @@ Once associated, the retention period begins from the association date.
 
 ```bash
 curl -X POST \
-  'https://cloudstorage-stage.adobe.io/alpha/policies/asset/scheduled_content_deletion/{policyId}/add-asset' \
+  'https://cloudstorage-stage.adobe.io/v1/policies/asset/scheduled_content_deletion/{policyId}/add-asset' \
   -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
   -H 'Content-Type: application/json' \
   -H 'x-request-id: 1234567890' \
@@ -468,7 +468,7 @@ Use a `POST /policies/asset/{policyType}/{policyId}/remove-asset` request to dis
 
 ```bash
 curl -X POST \
-  'https://cloudstorage-stage.adobe.io/alpha/policies/asset/scheduled_content_deletion/{policyId}/remove-asset' \
+  'https://cloudstorage-stage.adobe.io/v1/policies/asset/scheduled_content_deletion/{policyId}/remove-asset' \
   -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
   -H 'Content-Type: application/json' \
   -H 'x-request-id: 1234567890' \
@@ -489,7 +489,7 @@ Use a `GET /policies/asset/{policyType}n/{policyId}/assets` request to retrieve 
 
 ```bash
 curl -X GET \
-  'https://cloudstorage-stage.adobe.io/alpha/policies/asset/scheduled_content_deletion/{policyId}/assets' \
+  'https://cloudstorage-stage.adobe.io/v1/policies/asset/scheduled_content_deletion/{policyId}/assets' \
   -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
   -H 'x-request-id: 1234567890'
 ```
@@ -499,7 +499,7 @@ curl -X GET \
 ```json
 {
   "paging": {
-    "nextUrl": "https://cloudstorage-stage.adobe.io/alpha/policies/asset/scheduled_content_deletion/{policyId}/assets?cursor=eyJvZmZzZXQiOjIwfQ",
+    "nextUrl": "https://cloudstorage-stage.adobe.io/v1/policies/asset/scheduled_content_deletion/{policyId}/assets?cursor=eyJvZmZzZXQiOjIwfQ",
     "limit": 20
   },
   "items": [
@@ -524,7 +524,7 @@ Use a `GET /projects/{projectId}/policies` request to retrieve the current reten
 **Request**
 ```bash
 curl -X GET \
-  'https://cloudstorage-stage.adobe.io/alpha/projects/{projectId}/policies' \
+  'https://cloudstorage-stage.adobe.io/v1/projects/{projectId}/policies' \
   -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
   -H 'x-request-id: 1234567890'
 ```

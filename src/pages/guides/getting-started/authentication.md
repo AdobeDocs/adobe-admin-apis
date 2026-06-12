@@ -41,7 +41,7 @@ Perform the following steps:
       --data-urlencode 'grant_type=client_credentials' \
       --data-urlencode "client_id=$ADOBE_ADMIN_CLIENT_ID" \
       --data-urlencode "client_secret=$ADOBE_ADMIN_CLIENT_SECRET" \
-      --data-urlencode 'scope=openid, AdobeID, creative_sdk, adobe_admin_api'
+      --data-urlencode 'scope=openid, AdobeID, creative_sdk, admin_api.storage'
     ```
 
    A sample response is as follows:

@@ -45,13 +45,14 @@ The Content Retention Policy for Work-in-Progress (WIP) content defines how long
 - **Policy application and precedence:** When a Project is identified as Complete, the retention period begins based on the Content Retention Policy that is associated with that Project at that time by the Admin. If multiple policies apply to the same Project, the policy with the earliest retention date takes precedence.
 - **Retention lifecycle:**
 
-  | Stage                    | What happens                                         |
-  |--------------------------|------------------------------------------------------|
-  | Project marked complete  | Retention period begins                              |
-  | Retention period ends    | Project is soft-deleted and moves to Deleted view    |
-  | 30 days after soft delete| Project is permanently and irrecoverably deleted     |
+| Stage                    | What happens                                         |
+|--------------------------|------------------------------------------------------|
+| Project marked complete  | Retention period begins                              |
+| Retention period ends    | Project is soft-deleted and moves to Deleted view    |
+| 30 days after soft delete| Project is permanently and irrecoverably deleted     |
 
-  During the soft-delete window, users may restore the Project and resume work. See **Restoring a Project** below.
+During the soft-delete window, users may restore the Project and resume work. See **Restoring a Project** below.
+
 - **Restoring a Project:**
 
   End-users can restore a soft-deleted Project within the 30-day window. On restore:
